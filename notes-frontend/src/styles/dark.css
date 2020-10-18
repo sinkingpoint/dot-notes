@@ -1,0 +1,9 @@
+textarea.note_input {
+    resize: none;
+    border: none;
+}
+
+.note_input_bullet {
+    float: inline-start;
+    padding-right: 1em;
+}
