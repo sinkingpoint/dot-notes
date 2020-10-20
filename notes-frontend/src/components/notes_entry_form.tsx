@@ -1,5 +1,5 @@
-import React, { ReactNode, Component, ChangeEvent } from 'react';
-import NestedList, { NestedListData, NestedListType } from '../utils/nested_list';
+import React, { ReactNode, Component } from 'react';
+import NestedList, { NestedListData } from '../utils/nested_list';
 import {EditableListItemProps, EditableListItem} from './editable_list_item';
 
 // {
@@ -21,18 +21,13 @@ interface Note {
 }
 
 interface NotesEntryFormProps {
-  initialData?: NestedListData<string>;
+  initialData?: NestedList<string>;
 }
 
 interface NotesEntryFormState {
   lines: NestedList<Note>;
   toFocus?: number[];
   nextKey: number;
-}
-
-interface KeyifyReturn {
-  data: NestedListData<Note>,
-  nextKey: number
 }
 
 function arrayEquals(a1: number[], a2: number[]) {
@@ -53,9 +48,9 @@ function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocus
   if(typeof data === "string"){
     throw "Strings should be keyified, bailing";
   }
-  else if(data instanceof Array) {
+  else if(data instanceof NestedList) {
     let key = "";
-    const children = data.map((val, i) => {
+    const children = data.data.map((val, i) => {
       const newIndices = indices.slice().concat([i]);
       const newNode = renderNoteData(val, newIndices, autoFocusIndices, props);
       key += newNode.key;
@@ -72,6 +67,11 @@ function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocus
   }
 }
 
+interface KeyifyReturn {
+  data: NestedList<Note> | Note,
+  nextKey: number
+}
+
 function keyify(data: NestedListData<string>, nextKey: number) : KeyifyReturn {
   if(typeof data === "string"){
     return {
@@ -82,21 +82,13 @@ function keyify(data: NestedListData<string>, nextKey: number) : KeyifyReturn {
       nextKey: nextKey
     }
   }
-  else if(data instanceof Array) {
+  else if(data instanceof NestedList) {
     return {
-      data: data.map((val) => {
+      data: new NestedList<Note>(data.data.map((val) => {
         const ret = keyify(val, nextKey);
         nextKey = ret.nextKey;
         return ret.data;
-      }),
-      nextKey: nextKey
-    }
-  }
-  else {
-    const noteData = data as Note;
-    noteData.key = (nextKey ++).toString();
-    return {
-      data: noteData,
+      })),
       nextKey: nextKey
     }
   }
@@ -105,15 +97,16 @@ function keyify(data: NestedListData<string>, nextKey: number) : KeyifyReturn {
 class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState> {
   constructor(props: NotesEntryFormProps) {
     super(props);
-    const { data, nextKey } = keyify(props.initialData || [], 0);
+    const { data, nextKey } = keyify(props.initialData || new NestedList<string>(), 0);
     this.state = {
-      lines: new NestedList(data as NestedListType<Note>),
+      lines: new NestedList(data),
       nextKey: nextKey
     };
 
     this.onNewLine = this.onNewLine.bind(this);
     this.onChange = this.onChange.bind(this);
     this.onBackspace = this.onBackspace.bind(this);
+    this.onTab = this.onTab.bind(this);
   }
 
   onChange(indices: number[], newValue: string): void {
@@ -160,8 +153,17 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     });
   }
 
+  onTab(indices: number[]): void {
+    const newLines = this.state.lines.clone();
+    newLines.nest(indices);
+    this.setState({
+      lines: newLines,
+      toFocus: indices
+    });
+  }
+
   render(): ReactNode {
-    const children = renderNoteData(this.state.lines.data, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace});
+    const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab});
     return children;
   }
 }

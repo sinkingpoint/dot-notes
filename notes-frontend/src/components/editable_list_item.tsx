@@ -33,7 +33,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     }
     else if(e.key == "Tab") {
       e.preventDefault();
-      this.props.onDelete && this.props.onTab(this.props.indices);
+      this.props.onTab && this.props.onTab(this.props.indices);
     }
   }
 
