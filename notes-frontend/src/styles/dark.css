@@ -7,3 +7,11 @@ textarea.note_input {
     float: inline-start;
     padding-right: 1em;
 }
+
+.list_indent {
+    border: 5px 5px brown;
+}
+
+.test {
+    padding-left: 20px;
+}

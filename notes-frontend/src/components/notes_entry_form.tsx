@@ -1,82 +1,168 @@
 import React, { ReactNode, Component, ChangeEvent } from 'react';
-import EditableListItem from './editable_list_item';
+import NestedList, { NestedListData, NestedListType } from '../utils/nested_list';
+import {EditableListItemProps, EditableListItem} from './editable_list_item';
 
-interface NoteLine {
-  key: string,
-  line: string,
+// {
+//   "cats",
+//   "dogs",
+//   [
+//     "more cats",
+//     [
+//       "more dogs"
+//     ],
+//     "pigs"
+//   ],
+//   "more pigs"
+// }
+
+interface Note {
+  value: string,
+  key?: string
 }
 
 interface NotesEntryFormProps {
-  initialLines?: string[];
+  initialData?: NestedListData<string>;
 }
 
 interface NotesEntryFormState {
-  lines: NoteLine[];
-  toFocus?: number;
+  lines: NestedList<Note>;
+  toFocus?: number[];
   nextKey: number;
+}
+
+interface KeyifyReturn {
+  data: NestedListData<Note>,
+  nextKey: number
+}
+
+function arrayEquals(a1: number[], a2: number[]) {
+  if(a1 == undefined || a2 == undefined || a1.length != a2.length) {
+    return false;
+  }
+
+  for(let i=0;i<a1.length;i++) {
+    if(a2[i] != a1[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocusIndices?: number[], props?: EditableListItemProps) {
+  if(typeof data === "string"){
+    throw "Strings should be keyified, bailing";
+  }
+  else if(data instanceof Array) {
+    let key = "";
+    const children = data.map((val, i) => {
+      const newIndices = indices.slice().concat([i]);
+      const newNode = renderNoteData(val, newIndices, autoFocusIndices, props);
+      key += newNode.key;
+
+      return newNode;
+    });
+
+    return <div className="test" key={key}>
+      {children}
+    </div>;
+  }
+  else {
+    return <EditableListItem indices={indices} placeHolder={"Click to add content"} content={data.value} key={data.key} {...props} autoFocus={arrayEquals(indices, autoFocusIndices)} />;
+  }
+}
+
+function keyify(data: NestedListData<string>, nextKey: number) : KeyifyReturn {
+  if(typeof data === "string"){
+    return {
+      data: {
+        value: data as string,
+        key: (nextKey ++).toString()
+      },
+      nextKey: nextKey
+    }
+  }
+  else if(data instanceof Array) {
+    return {
+      data: data.map((val) => {
+        const ret = keyify(val, nextKey);
+        nextKey = ret.nextKey;
+        return ret.data;
+      }),
+      nextKey: nextKey
+    }
+  }
+  else {
+    const noteData = data as Note;
+    noteData.key = (nextKey ++).toString();
+    return {
+      data: noteData,
+      nextKey: nextKey
+    }
+  }
 }
 
 class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState> {
   constructor(props: NotesEntryFormProps) {
     super(props);
+    const { data, nextKey } = keyify(props.initialData || [], 0);
     this.state = {
-      lines: (props.initialLines || [""]).map((str, index) => {
-        return {
-          key: index.toString(),
-          line: str
-        };
-      }),
-      nextKey: props.initialLines ? props.initialLines.length : 1,
+      lines: new NestedList(data as NestedListType<Note>),
+      nextKey: nextKey
     };
+
     this.onNewLine = this.onNewLine.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.onBackspace = this.onBackspace.bind(this);
   }
 
-  onNewLine(index: number): void {
-    const { lines, nextKey } = this.state;
-    const newLine = {line: "", key: nextKey.toString()};
-    const newLines = (index == lines.length-1) ? lines.slice().concat([newLine]) : lines.slice(0, index+1).concat([newLine], lines.slice(index+1, lines.length));
+  onChange(indices: number[], newValue: string): void {
+    const newLines = this.state.lines.clone();
+    const oldValue = newLines.get(indices) as Note;
+    newLines.set(indices, {
+      key: oldValue.key,
+      value: newValue
+    });
+
     this.setState({
       lines: newLines,
-      toFocus: index + 1,
-      nextKey: nextKey + 1,
+      toFocus: undefined
     });
   }
 
-  onChange(index: number, e: ChangeEvent<HTMLTextAreaElement>): void {
-    const lines = this.state.lines.slice();
-    lines[index].line = e.target.value;
-    this.setState({
-      lines: lines,
-      toFocus: null
-    });
-  }
+  onBackspace(indices: number[]): void {
+    const oldValue = this.state.lines.get(indices) as Note;
+    if(oldValue.value == "") {
+      const newLines = this.state.lines.clone();
+      newLines.delete(indices);
 
-  onDeleteLine(index: number): void {
-    const { lines } = this.state;
-
-    // Don't delete the last line
-    if(index == 0 && lines.length == 1) {
-      return;
+      this.setState({
+        lines: newLines,
+        toFocus: undefined
+      });
     }
+  }
 
-    const newLines = lines.slice(0, index).concat(lines.slice(index+1, lines.length));
+  onNewLine(indices: number[]): void {
+    const newNextKey = this.state.nextKey + 1;
+    const newLines = this.state.lines.clone();
+    newLines.push(indices, {
+      key: this.state.nextKey.toString(),
+      value: ""
+    });
+
+    indices[indices.length-1] ++;
+
     this.setState({
+      nextKey: newNextKey,
       lines: newLines,
-      toFocus: index-1
+      toFocus: indices
     });
   }
 
   render(): ReactNode {
-    console.log(this.state.toFocus);
-    const list_items = this.state.lines.map(({key, line}, index) => {
-      return <EditableListItem autoFocus={index == this.state.toFocus} key={key} indent={0} placeHolder="Click to add content" content={line} onDelete={() => this.onDeleteLine(index)} onEnter={() => this.onNewLine(index)} onChange={(e) => this.onChange(index, e)}/>;
-    });
-
-    console.log(list_items);
-
-    return (
-      list_items
-    );
+    const children = renderNoteData(this.state.lines.data, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace});
+    return children;
   }
 }
 
