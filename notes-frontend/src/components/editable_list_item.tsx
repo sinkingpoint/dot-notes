@@ -52,7 +52,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
           if(autoFocus && ele) {
             ele.focus();
           }
-        }} className={`note_input ${className}`} defaultValue={content} placeholder={placeHolder} onKeyDown={this.onKeyDown} rows={rows} onChange={this.onChange} />
+        }} className={`note_input ${className}`} tabIndex={-1} defaultValue={content} placeholder={placeHolder} onKeyDown={this.onKeyDown} rows={rows} onChange={this.onChange} />
       </div>
     );
   }

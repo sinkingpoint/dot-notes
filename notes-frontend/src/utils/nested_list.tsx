@@ -42,7 +42,24 @@ class NestedList<T> {
 
   clone(): NestedList<T> {
     // Quick and dirty for now. Need to fix
-    return new NestedList<T>(JSON.parse(JSON.stringify(this.data)));
+    let hasArray = false;
+    this.data.forEach((val: NestedListData<T> | SourceData<T>) => {
+      if(val instanceof Array) {
+        hasArray = true;
+      }
+    });
+
+    if(!hasArray) {
+      return new NestedList<T>(this.data.slice());
+    }
+
+    return new NestedList<T>(this.data.map((val) => {
+      if(val instanceof NestedList) {
+        return val.clone();
+      }
+
+      return val;
+    }));
   }
 
   get(indices: number[]): NestedListData<T> {
@@ -88,8 +105,6 @@ class NestedList<T> {
         data.push(indices.slice(1), newData);
       }
       else {
-        console.log("Adding ", newData, " with ", indices, " in ", this.data, data, data instanceof NestedList);
-        console.log(NestedList);
         throw "Bad indices - non final index doesn't point to array";
       }
     }
@@ -113,13 +128,51 @@ class NestedList<T> {
     }
   }
 
-  nest(indices: number[]): void {
-    const data = this.data;
-
+  nest(indices: number[]): number[] {
     if(indices.length == 1) {
       const lastIndex = indices[0];
-      if(data[lastIndex-1] instanceof Array) {
+      const newData = this.data[lastIndex];
+      // If the item before this is a nested list, just move this into it
+      if(this.data[lastIndex-1] instanceof NestedList) {
+        (this.data[lastIndex-1] as NestedList<T>).data.push(newData);
         this.delete(indices);
+
+        const newIndex = (this.data[lastIndex-1] as NestedList<T>).data.length-1;
+
+        // data[lastIndex] now contains the value of the item _after_ the item we just nested. 
+        // If that is a nested list, for cleanlinesses sake, we merge them
+        if(this.data[lastIndex] instanceof NestedList) {
+          // Add all the second list to the first
+          (this.data[lastIndex] as NestedList<T>).data.forEach((val) => {
+            (this.data[lastIndex-1] as NestedList<T>).data.push(val);
+          });
+
+          // And delete it
+          this.delete(indices);
+        }
+
+        return [lastIndex-1, newIndex];
+      }
+      // If the item _after_ this is a nested list, just move this into it
+      else if(this.data[lastIndex+1] instanceof NestedList) {
+        (this.data[lastIndex+1] as NestedList<T>).data = [newData].concat((this.data[lastIndex+1] as NestedList<T>).data);
+        this.delete(indices);
+        return [lastIndex, 0];
+      }
+      // Otherwise, make this a new nested list with this as the only element
+      else {
+        this.push(indices, new NestedList(newData));
+        this.delete(indices);
+        return [lastIndex, 0];
+      }
+    }
+    else {
+      const data = this.data[indices[0]];
+      if(data instanceof NestedList) {
+        return [indices[0]].concat(data.nest(indices.slice(1)));
+      }
+      else {
+        throw "Bad indices - non final index doesn't point to array";
       }
     }
   }

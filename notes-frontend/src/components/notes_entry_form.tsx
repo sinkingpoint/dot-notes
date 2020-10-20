@@ -155,10 +155,10 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
 
   onTab(indices: number[]): void {
     const newLines = this.state.lines.clone();
-    newLines.nest(indices);
+    const newIndex = newLines.nest(indices);
     this.setState({
       lines: newLines,
-      toFocus: indices
+      toFocus: newIndex
     });
   }
 
