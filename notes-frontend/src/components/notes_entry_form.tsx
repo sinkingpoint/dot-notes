@@ -24,9 +24,14 @@ interface NotesEntryFormProps {
   initialData?: NestedList<string>;
 }
 
+interface AutoFocusProps{
+  index: number[],
+  cursor: {start: number, end: number}
+}
+
 interface NotesEntryFormState {
   lines: NestedList<Note>;
-  toFocus?: number[];
+  toFocus?: AutoFocusProps;
   nextKey: number;
 }
 
@@ -44,7 +49,7 @@ function arrayEquals(a1: number[], a2: number[]) {
   return true;
 }
 
-function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocusIndices?: number[], props?: EditableListItemProps) {
+function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocusIndices?: AutoFocusProps, props?: EditableListItemProps) {
   if(typeof data === "string"){
     throw "Strings should be keyified, bailing";
   }
@@ -58,12 +63,18 @@ function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocus
       return newNode;
     });
 
-    return <div className="test" key={key}>
+    return <ul className="note-list" key={key}>
       {children}
-    </div>;
+    </ul>;
   }
   else {
-    return <EditableListItem indices={indices} placeHolder={"Click to add content"} content={data.value} key={data.key} {...props} autoFocus={arrayEquals(indices, autoFocusIndices)} />;
+    return <EditableListItem 
+      indices={indices} 
+      placeHolder={"Click to add content"} 
+      content={data.value} key={data.key} 
+      autoFocus={autoFocusIndices && arrayEquals(indices, autoFocusIndices.index) ? autoFocusIndices.cursor : undefined} 
+      {...props} 
+    />;
   }
 }
 
@@ -149,17 +160,19 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.setState({
       nextKey: newNextKey,
       lines: newLines,
-      toFocus: indices
+      toFocus: {
+        index: indices,
+        cursor: {start: 0, end: 0}
+      }
     });
   }
 
-  onTab(indices: number[], shift: boolean): void {
+  onTab(indices: number[], shift: boolean, cursorStart: number, cursorEnd: number): void {
     const newLines = this.state.lines.clone();
     let newIndex;
     if(shift) {
-      console.log("Unnest");
       if(indices.length == 1) return;
-      newLines.unnest(indices);
+      newIndex = newLines.unnest(indices);
     }
     else {
       newIndex = newLines.nest(indices);
@@ -167,7 +180,10 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
 
     this.setState({
       lines: newLines,
-      toFocus: newIndex
+      toFocus: {
+        index: newIndex,
+        cursor: {start: cursorStart, end: cursorEnd}
+      }
     });
   }
 

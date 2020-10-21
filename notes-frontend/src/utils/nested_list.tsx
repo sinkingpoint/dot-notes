@@ -177,7 +177,7 @@ class NestedList<T> {
     }
   }
 
-  unnest(indices: number[]) {
+  unnest(indices: number[]): number[] {
     if(indices.length == 1) {
       throw "Cannot unnest an element in the base list";
     }
@@ -199,7 +199,7 @@ class NestedList<T> {
         const toAdd = parent.data.length == 1 ? this.data.slice(parentIndex+1, this.data.length) : this.data.slice(parentIndex, this.data.length);
         this.data = this.data.slice(0, parentIndex).concat([child], toAdd);
         parent.data.shift();
-        console.log("First");
+        return [parentIndex];
       }
       else if(childIndex == (this.data[parentIndex] as NestedList<T>).data.length-1) {
         // If we are unnesting the first element in the list, we can just move it after the list
@@ -208,7 +208,7 @@ class NestedList<T> {
         const toAdd = parent.data.length == 1 ? this.data.slice(0, parentIndex) : this.data.slice(0, parentIndex+1);
         this.data = toAdd.concat([child], this.data.slice(parentIndex+1, this.data.length));
         parent.data.pop();
-        console.log("Last");
+        return [parentIndex+1];
       }
       else {
         console.error("Middle unnesting currently unsupported");
@@ -217,7 +217,7 @@ class NestedList<T> {
     else {
       const data = this.data[indices[0]];
       if(data instanceof NestedList) {
-        data.unnest(indices.slice(1));
+        return [indices[0]].concat(data.unnest(indices.slice(1)));
       }
       else {
         throw "Bad indices - non final index doesn't point to array";

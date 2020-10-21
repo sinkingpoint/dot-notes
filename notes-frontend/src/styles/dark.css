@@ -1,6 +1,6 @@
-textarea.note_input {
+.note_input {
     resize: none;
-    border: none;
+    /* border: none !important; */
 }
 
 .note_input_bullet {
@@ -8,10 +8,11 @@ textarea.note_input {
     padding-right: 1em;
 }
 
-.list_indent {
-    border: 5px 5px brown;
+.note-list {
+    padding-left: 20px;
+    list-style: disc;
 }
 
-.test {
-    padding-left: 20px;
+.note-list .note-list {
+    border-left: 2px solid gray;
 }
