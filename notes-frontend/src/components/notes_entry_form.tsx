@@ -140,9 +140,30 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
       const newLines = this.state.lines.clone();
       newLines.delete(indices);
 
+      let newFocusIndex = indices.slice();
+      while(newFocusIndex[newFocusIndex.length-1] == 0) {
+        newFocusIndex.pop();
+      }
+
+      newFocusIndex[newFocusIndex.length-1] -= 1;
+
+      let newFocus = newLines.get(newFocusIndex);
+      while(newFocus instanceof NestedList) {
+        newFocusIndex.push(newFocus.data.length-1);
+        newFocus = (newFocus as NestedList<Note>).get([newFocus.data.length-1]);
+      }
+
+      const newLength = (newLines.get(newFocusIndex) as Note).value.length;
+
       this.setState({
         lines: newLines,
-        toFocus: undefined
+        toFocus: {
+          index: newFocusIndex,
+          cursor: {
+            start: newLength,
+            end: newLength
+          }
+        }
       });
     }
   }
@@ -175,7 +196,10 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
       newIndex = newLines.unnest(indices);
     }
     else {
-      newIndex = newLines.nest(indices);
+      // Don't allow indenting twice without an intermediate
+      if(indices[indices.length-1] != 0) {
+        newIndex = newLines.nest(indices);
+      }
     }
 
     this.setState({

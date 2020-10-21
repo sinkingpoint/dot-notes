@@ -121,6 +121,11 @@ class NestedList<T> {
       const data = this.data[indices[0]];
       if(data instanceof NestedList) {
         data.delete(indices.slice(1));
+
+        // Remove the child array if it's now empty
+        if((this.data[indices[0]] as NestedList<T>).data.length == 0) {
+          this.data = this.data.slice(0, indices[0]).concat(this.data.slice(indices[0]+1, indices.length));
+        }
       }
       else {
         throw "Bad indices - non final index doesn't point to array";
