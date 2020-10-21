@@ -32,7 +32,7 @@ class NestedList<T> {
         this.data = (listify(data) as NestedList<T>).data;
       }
     }
-    else if(data) {
+    else if(data !== undefined) {
       this.data = [data];
     }
     else {

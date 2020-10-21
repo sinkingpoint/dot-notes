@@ -110,7 +110,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     super(props);
     const { data, nextKey } = keyify(props.initialData || new NestedList<string>(), 0);
     this.state = {
-      lines: new NestedList(data),
+      lines: data as NestedList<Note>,
       nextKey: nextKey
     };
 
