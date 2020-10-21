@@ -9,7 +9,7 @@ export interface EditableListItemProps {
     onChange?: (indices: number[], newValue: string) => void,
     onEnter?: (indices: number[]) => void;
     onDelete?: (indices: number[]) => void;
-    onTab?: (indices: number[]) => void;
+    onTab?: (indices: number[], shift: boolean) => void;
 }
 
 export class EditableListItem extends Component<EditableListItemProps, unknown> {
@@ -33,7 +33,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     }
     else if(e.key == "Tab") {
       e.preventDefault();
-      this.props.onTab && this.props.onTab(this.props.indices);
+      this.props.onTab && this.props.onTab(this.props.indices, e.shiftKey);
     }
   }
 

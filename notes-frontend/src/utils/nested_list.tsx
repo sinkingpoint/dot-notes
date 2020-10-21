@@ -176,6 +176,54 @@ class NestedList<T> {
       }
     }
   }
+
+  unnest(indices: number[]) {
+    if(indices.length == 1) {
+      throw "Cannot unnest an element in the base list";
+    }
+
+    if(indices.length == 2) {
+      const parentIndex = indices[0];
+      const childIndex = indices[1];
+      if(!(this.data[parentIndex] instanceof NestedList)) {
+        throw "Bad indices - non final index doesn't point to array";
+      }
+
+      const parent = (this.data[parentIndex] as NestedList<T>);
+      const child: NestedListData<T> = parent.data[childIndex];
+
+      if(childIndex == 0) {
+        // If we are unnesting the first element in the list, we can just move it before the list
+        
+        // If this is the only element in the parent list, slice this list to remove it
+        const toAdd = parent.data.length == 1 ? this.data.slice(parentIndex+1, this.data.length) : this.data.slice(parentIndex, this.data.length);
+        this.data = this.data.slice(0, parentIndex).concat([child], toAdd);
+        parent.data.shift();
+        console.log("First");
+      }
+      else if(childIndex == (this.data[parentIndex] as NestedList<T>).data.length-1) {
+        // If we are unnesting the first element in the list, we can just move it after the list
+
+        // If this is the only element in the parent list, slice this list to remove it
+        const toAdd = parent.data.length == 1 ? this.data.slice(0, parentIndex) : this.data.slice(0, parentIndex+1);
+        this.data = toAdd.concat([child], this.data.slice(parentIndex+1, this.data.length));
+        parent.data.pop();
+        console.log("Last");
+      }
+      else {
+        console.error("Middle unnesting currently unsupported");
+      }
+    }
+    else {
+      const data = this.data[indices[0]];
+      if(data instanceof NestedList) {
+        data.unnest(indices.slice(1));
+      }
+      else {
+        throw "Bad indices - non final index doesn't point to array";
+      }
+    }
+  }
 }
 
 export default NestedList;

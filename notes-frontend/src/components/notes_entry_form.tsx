@@ -153,9 +153,18 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     });
   }
 
-  onTab(indices: number[]): void {
+  onTab(indices: number[], shift: boolean): void {
     const newLines = this.state.lines.clone();
-    const newIndex = newLines.nest(indices);
+    let newIndex;
+    if(shift) {
+      console.log("Unnest");
+      if(indices.length == 1) return;
+      newLines.unnest(indices);
+    }
+    else {
+      newIndex = newLines.nest(indices);
+    }
+
     this.setState({
       lines: newLines,
       toFocus: newIndex
