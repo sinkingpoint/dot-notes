@@ -15,7 +15,8 @@ struct Note {
 }
 
 pub fn get_api() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    return warp::path!("api" / "v1" / "note" / String).and(warp::get()).and_then(get_note);
+    // TODO: Make CORS less permissive
+    return warp::path!("api" / "v1" / "note" / String).and(warp::get()).and_then(get_note).with(warp::cors().allow_any_origin().allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]));
 }
 
 async fn get_note(guid: String) -> Result<impl warp::Reply, warp::Rejection> {
