@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import NotesEntryForm from './components/notes_entry_form';
+import NotePage from './components/note_entry';
 import NestedList from './utils/nested_list';
 
 import './styles/dark.css';
@@ -8,4 +8,4 @@ import 'antd/dist/antd.css';
 
 const testData = new NestedList<string>([""]);
 
-ReactDOM.render(<NotesEntryForm initialData={testData}/>, document.body);
+ReactDOM.render(<NotePage title="Test Page" contents={testData}/>, document.body);

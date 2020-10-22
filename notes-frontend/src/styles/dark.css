@@ -1,6 +1,9 @@
+body {
+   font-family: 'Inter', sans-serif;
+}
+
 .note_input {
     resize: none;
-    /* border: none !important; */
 }
 
 .note_input_bullet {
@@ -15,4 +18,20 @@
 
 .note-list .note-list {
     border-left: 2px solid gray;
+}
+
+.note-entry-page {
+    min-height: 100vh !important;
+}
+
+.note-entry-form {
+    padding: 5em;
+    flex-grow: 1;
+}
+
+.note-title {
+    font-weight: 600 !important;
+    font-size: 38px !important;
+    line-height: 1.23 !important;
+    color: rgba(0, 0, 0, 0.85) !important;
 }

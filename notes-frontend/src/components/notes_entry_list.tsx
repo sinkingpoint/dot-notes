@@ -2,19 +2,6 @@ import React, { ReactNode, Component } from 'react';
 import NestedList, { NestedListData } from '../utils/nested_list';
 import {EditableListItemProps, EditableListItem} from './editable_list_item';
 
-// {
-//   "cats",
-//   "dogs",
-//   [
-//     "more cats",
-//     [
-//       "more dogs"
-//     ],
-//     "pigs"
-//   ],
-//   "more pigs"
-// }
-
 interface Note {
   value: string,
   key?: string
@@ -22,6 +9,7 @@ interface Note {
 
 interface NotesEntryFormProps {
   initialData?: NestedList<string>;
+  className?: string;
 }
 
 interface AutoFocusProps{
@@ -213,7 +201,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
 
   render(): ReactNode {
     const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab});
-    return children;
+    return <div className={this.props.className}>{children}</div>;
   }
 }
 

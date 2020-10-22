@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
   entry: "./src/index.tsx",
@@ -46,6 +47,7 @@ module.exports = {
     new webpack.LoaderOptionsPlugin({
       minimize: true
     }),
-    new webpack.optimize.AggressiveMergingPlugin()
+    new webpack.optimize.AggressiveMergingPlugin(),
+    new BundleAnalyzerPlugin()
   ]
 };

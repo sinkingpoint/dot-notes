@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, KeyboardEvent, RefObject, ChangeEvent } from 'react';
+import React, { Component, ReactNode, RefObject } from 'react';
 import { Input } from 'antd';
 
 const TextArea = Input;
@@ -58,7 +58,6 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             }
           }}
           className={`note_input ${className}`}
-          tabIndex={-1}
           value={content}
           placeholder={placeHolder}
           onKeyDown={this.onKeyDown}
