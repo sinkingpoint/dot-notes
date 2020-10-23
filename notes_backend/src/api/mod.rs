@@ -23,14 +23,14 @@ async fn get_note(guid: String) -> Result<impl warp::Reply, warp::Rejection> {
     match guid.as_str() {
         "1" => {
             Ok(Box::new(warp::reply::json(&Note{
-                title: "Test Note 1".to_owned(),
+                title: "Test Note 2".to_owned(),
                 contents: vec![
                     NoteContents::Note("Cats".to_owned()),
                     NoteContents::Note("Dogs".to_owned()),
                     NoteContents::Block(vec![
                         NoteContents::Note("More Cats".to_owned()),
                         NoteContents::Block(vec![
-                            NoteContents::Note("More Dogs".to_owned()),
+                            NoteContents::Note("Even More Dogs".to_owned()),
                         ]),
                         NoteContents::Note("Pigs".to_owned()),
                     ]),
