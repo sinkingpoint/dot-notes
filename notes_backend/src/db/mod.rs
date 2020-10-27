@@ -26,9 +26,9 @@ impl SQLLiteDBConnection {
         let manager = ConnectionManager::<SqliteConnection>::new(path);
         let pool = Pool::builder().max_size(1).build(manager)?;
     
-        return Ok(SQLLiteDBConnection{
-            pool: pool
-        });
+        Ok(SQLLiteDBConnection{
+            pool
+        })
     }
 }
 
@@ -46,7 +46,7 @@ impl DBConnection for SQLLiteDBConnection {
         let contents = serde_json::to_string(&note.contents).unwrap();
         if note.id.is_some() {
             diesel::update(notes::table).filter(notes::id.eq(note.id.as_ref().unwrap())).set((notes::title.eq(&note.title), notes::contents.eq(&contents))).execute(&connection)?;
-            return Ok(None);
+            Ok(None)
         }
         else {
             let mut rng = rand::thread_rng();
@@ -65,27 +65,25 @@ impl DBConnection for SQLLiteDBConnection {
             diesel::insert_into(notes::table).values(DBNote{
                 id: new_id.clone(),
                 title: note.title.clone(),
-                contents: contents,
+                contents,
                 daily: false,
                 cdate: now,
                 edate: now,
             }).execute(&connection)?;
 
-            return Ok(Some(new_id));
+            Ok(Some(new_id))
         }
     }
 
     fn get_note(&self, id: &str) -> QueryResult<Option<DBNote>> {
         let connection = self.pool.get().expect("Failed to get connection");
-        return notes::table.filter(notes::id.eq(id)).limit(1).load::<DBNote>(&connection).and_then(|res| {
-            return Ok(res.into_iter().next());
-        });
+        notes::table.filter(notes::id.eq(id)).limit(1).load::<DBNote>(&connection).map(|res| res.into_iter().next())
     }
 }
 
 impl Clone for SQLLiteDBConnection {
     fn clone(&self) -> SQLLiteDBConnection {
-        return SQLLiteDBConnection {
+        SQLLiteDBConnection {
             pool: self.pool.clone()
         }
     }

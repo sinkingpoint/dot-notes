@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 
 pub fn get_api(db: SQLLiteDBConnection) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // TODO: Make CORS less permissive
-    return warp::path!("api" / "v1" / "note" / String).and(warp::get()).and(with_db(db)).and_then(get_note).with(warp::cors().allow_any_origin().allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]));
+    warp::path!("api" / "v1" / "note" / String).and(warp::get()).and(with_db(db)).and_then(get_note).with(warp::cors().allow_any_origin().allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]))
 }
 
 fn with_db(db: SQLLiteDBConnection) -> impl Filter<Extract = (SQLLiteDBConnection,), Error = std::convert::Infallible> + Clone {

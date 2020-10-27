@@ -30,10 +30,10 @@ impl TryFrom<crate::db::DBNote> for Note {
             }
         };
 
-        return Ok(Note {
+        Ok(Note {
             id: Some(n.id),
             title: n.title,
-            contents: contents,
-        });
+            contents,
+        })
     }
 }
