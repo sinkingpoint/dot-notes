@@ -13,7 +13,8 @@ embed_migrations!();
 
 pub trait DBConnection {
     fn run_migrations(&self) -> Result<(), diesel_migrations::RunMigrationsError>;
-    fn put_note(&self, note: &Note) -> Result<Option<String>, diesel::result::Error>;
+    fn create_note(&self) -> Result<String, diesel::result::Error>;
+    fn update_note(&self, note: &Note) -> Result<(), diesel::result::Error>;
     fn get_note(&self, id: &str) -> Result<Option<DBNote>, diesel::result::Error>;
 }
 
@@ -39,47 +40,48 @@ impl DBConnection for SQLLiteDBConnection {
         }
     }
 
-    fn put_note(&self, note: &Note) -> Result<Option<String>, diesel::result::Error> {
+    fn create_note(&self) -> Result<String, diesel::result::Error> {
         let connection = self.pool.get().expect("Failed to get connection");
-        let contents = serde_json::to_string(&note.contents).unwrap();
-        if note.id.is_some() {
-            diesel::update(notes::table)
-                .filter(notes::id.eq(note.id.as_ref().unwrap()))
-                .set((notes::title.eq(&note.title), notes::contents.eq(&contents)))
-                .execute(&connection)?;
-            Ok(None)
-        } else {
-            let mut rng = rand::thread_rng();
-            let chars = [
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-                'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
-                'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-                'W', 'X', 'Y', 'Z',
-            ];
-            let new_id: String = {
-                let mut build = String::new();
-                for _ in 0..32 {
-                    build.push(chars[rng.gen::<usize>() % chars.len()]);
-                }
+        let mut rng = rand::thread_rng();
+        let chars = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
+            'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+        ];
+        let new_id: String = {
+            let mut build = String::new();
+            for _ in 0..32 {
+                build.push(chars[rng.gen::<usize>() % chars.len()]);
+            }
 
-                build
-            };
+            build
+        };
 
-            let now: i64 = Utc::now().timestamp();
+        let now: i64 = Utc::now().timestamp();
 
-            diesel::insert_into(notes::table)
-                .values(DBNote {
-                    id: new_id.clone(),
-                    title: note.title.clone(),
-                    contents,
-                    daily: false,
-                    cdate: now,
-                    edate: now,
-                })
-                .execute(&connection)?;
+        diesel::insert_into(notes::table)
+            .values(DBNote {
+                id: new_id.clone(),
+                title: "New Note".to_owned(),
+                contents: "[\"\"]".to_owned(),
+                daily: false,
+                cdate: now,
+                edate: now,
+            })
+            .execute(&connection)?;
 
-            Ok(Some(new_id))
-        }
+        Ok(new_id)
+    }
+
+    fn update_note(&self, note: &Note) -> Result<(), diesel::result::Error> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        let contents = serde_json::to_string(&note.contents).expect("Failed to marshall contents");
+        diesel::update(notes::table)
+            .filter(notes::id.eq(&note.id))
+            .set((notes::title.eq(&note.title), notes::contents.eq(&contents)))
+            .execute(&connection)?;
+        Ok(())
     }
 
     fn get_note(&self, id: &str) -> QueryResult<Option<DBNote>> {

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
+use warp::reject::Reject;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -10,14 +11,23 @@ pub enum NoteContents {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Note {
-    pub id: Option<String>,
+    pub id: String,
     pub title: String,
     pub contents: Vec<NoteContents>,
 }
 
-pub enum APIError {
-    DataFormatError,
+#[derive(Serialize, Debug)]
+pub struct NoteIDResult {
+    pub id: String,
 }
+
+#[derive(Debug)]
+pub enum APIError {
+    DatabaseError(String),
+    MalformedData,
+}
+
+impl Reject for APIError {}
 
 impl TryFrom<crate::db::DBNote> for Note {
     type Error = APIError;
@@ -26,12 +36,12 @@ impl TryFrom<crate::db::DBNote> for Note {
         let contents = match serde_json::from_str(&n.contents) {
             Ok(note_contents) => note_contents,
             Err(_) => {
-                return Err(APIError::DataFormatError);
+                return Err(APIError::MalformedData);
             }
         };
 
         Ok(Note {
-            id: Some(n.id),
+            id: n.id,
             title: n.title,
             contents,
         })

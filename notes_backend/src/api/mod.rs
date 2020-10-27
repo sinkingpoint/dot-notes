@@ -1,6 +1,6 @@
 mod models;
 
-pub use models::{Note, NoteContents};
+pub use models::{APIError, Note, NoteContents, NoteIDResult};
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
 use std::convert::TryFrom;
@@ -10,21 +10,32 @@ pub fn get_api(
     db: SQLLiteDBConnection,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // TODO: Make CORS less permissive
-    warp::path!("api" / "v1" / "note" / String)
+    let get_note_path = warp::path!("api" / "v1" / "note" / String)
         .and(warp::get())
-        .and(with_db(db))
+        .and(with_db(db.clone()))
         .and_then(get_note)
-        .with(
-            warp::cors()
-                .allow_any_origin()
-                .allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]),
-        )
+        .with(warp::cors().allow_any_origin().allow_methods(vec!["GET"]));
+
+    let create_note_path = warp::path!("api" / "v1" / "note")
+        .and(warp::post())
+        .and(with_db(db))
+        .and_then(create_note)
+        .with(warp::cors().allow_any_origin().allow_methods(vec!["POST"]));
+
+    get_note_path.or(create_note_path)
 }
 
 fn with_db(
     db: SQLLiteDBConnection,
 ) -> impl Filter<Extract = (SQLLiteDBConnection,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || db.clone())
+}
+
+async fn create_note(db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.create_note() {
+        Ok(id) => Ok(warp::reply::json(&NoteIDResult { id })),
+        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
+    }
 }
 
 async fn get_note(
@@ -36,15 +47,12 @@ async fn get_note(
             let note = match Note::try_from(note) {
                 Ok(note) => note,
                 Err(_) => {
-                    return Err(warp::reject::reject());
+                    return Err(warp::reject::custom(APIError::MalformedData));
                 }
             };
             Ok(Box::new(warp::reply::json(&note)))
         }
         Ok(None) => Err(warp::reject::not_found()),
-        Err(e) => {
-            eprintln!("Failed to get note: {}", e);
-            Err(warp::reject::not_found())
-        }
+        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
     }
 }
