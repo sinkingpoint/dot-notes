@@ -1,44 +1,34 @@
-use serde::{Serialize, Deserialize};
+mod models;
+
+pub use models::{Note, NoteContents};
+
 use warp::Filter;
+use crate::db::{SQLLiteDBConnection, DBConnection};
+use std::convert::TryFrom;
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-enum NoteContents {
-    Note(String),
-    Block(Vec<NoteContents>)
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Note {
-    title: String,
-    contents: Vec<NoteContents>
-}
-
-pub fn get_api() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn get_api(db: SQLLiteDBConnection) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // TODO: Make CORS less permissive
-    return warp::path!("api" / "v1" / "note" / String).and(warp::get()).and_then(get_note).with(warp::cors().allow_any_origin().allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]));
+    return warp::path!("api" / "v1" / "note" / String).and(warp::get()).and(with_db(db)).and_then(get_note).with(warp::cors().allow_any_origin().allow_methods(vec!["OPTIONS", "GET", "POST", "DELETE", "PUT"]));
 }
 
-async fn get_note(guid: String) -> Result<impl warp::Reply, warp::Rejection> {
-    match guid.as_str() {
-        "1" => {
-            Ok(Box::new(warp::reply::json(&Note{
-                title: "Test Note 2".to_owned(),
-                contents: vec![
-                    NoteContents::Note("Cats".to_owned()),
-                    NoteContents::Note("Dogs".to_owned()),
-                    NoteContents::Block(vec![
-                        NoteContents::Note("More Cats".to_owned()),
-                        NoteContents::Block(vec![
-                            NoteContents::Note("Even More Dogs".to_owned()),
-                        ]),
-                        NoteContents::Note("Pigs".to_owned()),
-                    ]),
-                    NoteContents::Note("More Pigs".to_owned()),
-                ]
-            })))
+fn with_db(db: SQLLiteDBConnection) -> impl Filter<Extract = (SQLLiteDBConnection,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || db.clone())
+}
+
+async fn get_note(id: String, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.get_note(&id) {
+        Ok(Some(note)) => {
+            let note = match Note::try_from(note) {
+                Ok(note) => note,
+                Err(_) => {
+                    return Err(warp::reject::reject());
+                }
+            };
+            Ok(Box::new(warp::reply::json(&note)))
         },
-        _ => {
+        Ok(None) => Err(warp::reject::not_found()),
+        Err(e) => {
+            eprintln!("Failed to get note: {}", e);
             Err(warp::reject::not_found())
         }
     }
