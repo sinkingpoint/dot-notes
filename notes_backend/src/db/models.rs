@@ -7,4 +7,6 @@ pub struct DBNote {
     pub title: String,
     pub contents: String,
     pub daily: bool,
+    pub cdate: i64,
+    pub edate: i64
 }

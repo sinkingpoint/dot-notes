@@ -13,6 +13,8 @@ table! {
         title -> Text,
         contents -> Text,
         daily -> Bool,
+        cdate -> BigInt,
+        edate -> BigInt,
     }
 }
 

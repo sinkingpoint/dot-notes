@@ -3,6 +3,8 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
+extern crate chrono;
+
 mod api;
 mod db;
 

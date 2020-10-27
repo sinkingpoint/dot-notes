@@ -4,6 +4,7 @@ mod schema;
 use super::api::Note;
 use rand::Rng;
 use diesel::prelude::*;
+use chrono::prelude::*;
 use schema::notes;
 pub use models::DBNote;
 use diesel::r2d2::{self, ConnectionManager, Pool};
@@ -59,11 +60,15 @@ impl DBConnection for SQLLiteDBConnection {
                 build
             };
 
+            let now: i64 = Utc::now().timestamp();
+
             diesel::insert_into(notes::table).values(DBNote{
                 id: new_id.clone(),
                 title: note.title.clone(),
                 contents: contents,
                 daily: false,
+                cdate: now,
+                edate: now,
             }).execute(&connection)?;
 
             return Ok(Some(new_id));
