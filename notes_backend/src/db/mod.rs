@@ -11,10 +11,21 @@ use schema::notes;
 
 embed_migrations!();
 
+/// DBConnection is a trait defining everything we need to be able to do with the database
+/// Using this trait allows DB consumers to abstract their access and not worry about the 
+/// nature of the underlying data store
 pub trait DBConnection {
+    /// Run all the migrations created by the above `embed_migrations`
     fn run_migrations(&self) -> Result<(), diesel_migrations::RunMigrationsError>;
+
+    /// Creates a new note, with default values, returning the ID for futher editing
     fn create_note(&self) -> Result<String, diesel::result::Error>;
+
+    /// Updates the given note in the DB (identified by the ID in the Note)
+    /// to match the given note
     fn update_note(&self, note: &Note) -> Result<(), diesel::result::Error>;
+
+    /// Gets the Note with the given ID
     fn get_note(&self, id: &str) -> Result<Option<DBNote>, diesel::result::Error>;
 }
 
@@ -42,22 +53,13 @@ impl DBConnection for SQLLiteDBConnection {
 
     fn create_note(&self) -> Result<String, diesel::result::Error> {
         let connection = self.pool.get().expect("Failed to get connection");
+
+        // Generate an ID for the new note, which is 32 random characters from the below ranges
         let mut rng = rand::thread_rng();
-        let chars = [
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
-            'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-        ];
-        let new_id: String = {
-            let mut build = String::new();
-            for _ in 0..32 {
-                build.push(chars[rng.gen::<usize>() % chars.len()]);
-            }
+        let chars: Vec<char> = ('a'..'z').chain('A'..'Z').chain('0'..'9').collect();
+        let new_id: String = (0..32).map(|_| chars[rng.gen::<usize>() % chars.len()]).collect();
 
-            build
-        };
-
+        // Get "Now" in UTC, which we use as the default edit and create date
         let now: i64 = Utc::now().timestamp();
 
         diesel::insert_into(notes::table)
