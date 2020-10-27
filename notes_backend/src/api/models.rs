@@ -21,6 +21,11 @@ pub struct NoteIDResult {
     pub id: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct NewNoteRequest {
+    pub name: String
+}
+
 #[derive(Debug)]
 pub enum APIError {
     DatabaseError(String),

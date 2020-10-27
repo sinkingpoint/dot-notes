@@ -3,7 +3,9 @@ const webpack = require("webpack");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-  entry: "./src/index.tsx",
+  entry: {
+    note_editor_page: "./src/note_editor_page.tsx"
+  },
   mode: "development",
   module: {
     rules: [
@@ -34,13 +36,20 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist/"),
     publicPath: "/dist/",
-    filename: "bundle.js"
+    filename: "[name]-bundle.js"
   },
   devServer: {
     contentBase: path.join(__dirname, "dist/"),
     port: 3000,
     publicPath: "http://localhost:3000",
-    hotOnly: true
+    hotOnly: true,
+    proxy: {
+      '/note': {
+        bypass: function(req) {
+          return '/index.html';
+        }
+      }
+    }
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
