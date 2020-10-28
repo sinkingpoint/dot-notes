@@ -1,10 +1,11 @@
 mod models;
 
-pub use models::{Note, NoteContents, NoteIDResult, APIError, NewNoteRequest};
+pub use models::{Note, NoteContents, NoteIDResult, APIError, NewNoteRequest, UpdateNoteRequest};
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
 use std::convert::TryFrom;
 use warp::Filter;
+use warp::http::StatusCode;
 
 pub fn get_api(
     db: SQLLiteDBConnection,
@@ -15,7 +16,13 @@ pub fn get_api(
     let get_note_path = warp::path!("api" / "v1" / "note" / String)
         .and(warp::get())
         .and(with_db(db.clone()))
-        .and_then(get_note).with(warp::cors().allow_any_origin());
+        .and_then(get_note).with(&cors.clone().allow_methods(vec!["PUT", "OPTIONS", "GET"]));
+    
+    let save_note_path = warp::path!("api" / "v1" / "note" / String)
+        .and(warp::put())
+        .and(warp::filters::body::json())
+        .and(with_db(db.clone()))
+        .and_then(save_note).with(&cors.clone().allow_methods(vec!["PUT", "OPTIONS", "GET"]));
     
     let create_note_path = warp::path!("api" / "v1" / "note")
         .and(warp::post())
@@ -23,7 +30,7 @@ pub fn get_api(
         .and(with_db(db))
         .and_then(create_note).with(cors.allow_methods(vec!["POST", "OPTIONS"]));
     
-    get_note_path.or(create_note_path)
+    get_note_path.or(create_note_path).or(save_note_path)
 }
 
 fn with_db(
@@ -54,6 +61,13 @@ async fn get_note(
             Ok(Box::new(warp::reply::json(&note)))
         }
         Ok(None) => Err(warp::reject::not_found()),
+        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string())))
+    }
+}
+
+async fn save_note(id: String, note: UpdateNoteRequest, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.update_note(&Note{id: id, title: note.title, contents: note.contents}) {
+        Ok(()) => Ok(StatusCode::NO_CONTENT),
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string())))
     }
 }

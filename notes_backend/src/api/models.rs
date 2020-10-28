@@ -26,6 +26,12 @@ pub struct NewNoteRequest {
     pub name: String
 }
 
+#[derive(Deserialize, Debug)]
+pub struct UpdateNoteRequest {
+    pub title: String,
+    pub contents: Vec<NoteContents>,
+}
+
 #[derive(Debug)]
 pub enum APIError {
     DatabaseError(String),

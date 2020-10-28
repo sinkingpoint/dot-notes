@@ -1,4 +1,4 @@
-type NoteContents = string | NoteContents[];
+export type NoteContents = string | NoteContents[];
 
 export class Note {
     title: string;
@@ -21,6 +21,10 @@ export class APIClient {
         return req.then(resp => resp.json()).then(data => data['id']);
     }
 
+    async update_note(id: string, note: Note): Promise<Response> {
+        return this._put(`/api/v1/note/${id}`, note);
+    }
+
     async _get(uri: string): Promise<Response> {
         return fetch(this.apiBase + uri);
     }
@@ -28,6 +32,21 @@ export class APIClient {
     async _post(uri: string, data?: any) {
         const options: RequestInit = {
             method: 'POST',
+            headers: {
+                "content-type": "application/json"
+            }
+        };
+
+        if(data !== undefined) {
+            options['body'] = JSON.stringify(data);
+        }
+
+        return fetch(this.apiBase + uri, options);
+    }
+
+    async _put(uri: string, data?: any) {
+        const options: RequestInit = {
+            method: 'PUT',
             headers: {
                 "content-type": "application/json"
             }

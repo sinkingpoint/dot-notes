@@ -1,4 +1,5 @@
 import React, { ReactNode, Component } from 'react';
+import { NoteContents } from '../api/client';
 import NestedList, { NestedListData } from '../utils/nested_list';
 import {EditableListItemProps, EditableListItem} from './editable_list_item';
 
@@ -10,6 +11,7 @@ interface Note {
 interface NotesEntryFormProps {
   initialData?: NestedList<string>;
   className?: string;
+  onChange?(newData: NoteContents[]): void;
 }
 
 interface AutoFocusProps{
@@ -71,6 +73,20 @@ interface KeyifyReturn {
   nextKey: number
 }
 
+function unkeyify(data: NestedList<Note>): NoteContents[] {
+  const newData: NoteContents[] = [];
+  data.data.forEach(element => {
+    if(element instanceof NestedList) {
+      newData.push(unkeyify(element));
+    }
+    else {
+      newData.push(element.value);
+    }
+  });
+
+  return newData;
+}
+
 function keyify(data: NestedListData<string>, nextKey: number) : KeyifyReturn {
   if(typeof data === "string"){
     return {
@@ -116,6 +132,8 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
       value: newValue
     });
 
+    this.props.onChange && this.props.onChange(unkeyify(newLines));
+
     this.setState({
       lines: newLines,
       toFocus: undefined
@@ -143,6 +161,8 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
 
       const newLength = (newLines.get(newFocusIndex) as Note).value.length;
 
+      this.props.onChange && this.props.onChange(unkeyify(newLines));
+
       this.setState({
         lines: newLines,
         toFocus: {
@@ -165,6 +185,8 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     });
 
     indices[indices.length-1] ++;
+
+    this.props.onChange && this.props.onChange(unkeyify(newLines));
 
     this.setState({
       nextKey: newNextKey,
@@ -189,6 +211,8 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
         newIndex = newLines.nest(indices);
       }
     }
+
+    this.props.onChange && this.props.onChange(unkeyify(newLines));
 
     this.setState({
       lines: newLines,
