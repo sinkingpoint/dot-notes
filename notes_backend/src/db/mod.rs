@@ -11,6 +11,8 @@ use schema::notes;
 
 embed_migrations!();
 
+sql_function!(fn upper(x: diesel::types::VarChar) -> diesel::types::VarChar);
+
 /// DBConnection is a trait defining everything we need to be able to do with the database
 /// Using this trait allows DB consumers to abstract their access and not worry about the 
 /// nature of the underlying data store
@@ -27,6 +29,8 @@ pub trait DBConnection {
 
     /// Gets the Note with the given ID
     fn get_note(&self, id: &str) -> Result<Option<DBNote>, diesel::result::Error>;
+
+    fn search_notes(&self, query: String, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error>;
 }
 
 pub struct SQLLiteDBConnection {
@@ -93,6 +97,19 @@ impl DBConnection for SQLLiteDBConnection {
             .limit(1)
             .load::<DBNote>(&connection)
             .map(|res| res.into_iter().next())
+    }
+
+    fn search_notes(&self, query: String, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error> {
+        // This is really inefficient. It translates to WHERE UPPER(title) LIKE UPPER('%' :: $QUERY :: '%');
+        // which sucks, but this is the only way I can think of to do partial word matches at the moment, outside 
+        // of an elasticsearch index which I'm not doing
+        let connection = self.pool.get().expect("Failed to get connection");
+        let query = format!("%{}%", query.to_uppercase());
+        let db_query = notes::table
+            .filter(upper(notes::title).like(query))
+            .limit(limit);
+        
+        db_query.load::<DBNote>(&connection)
     }
 }
 

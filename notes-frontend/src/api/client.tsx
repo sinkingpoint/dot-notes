@@ -1,6 +1,7 @@
 export type NoteContents = string | NoteContents[];
 
 export class Note {
+    id?: string;
     title: string;
     contents: NoteContents[];
 }
@@ -23,6 +24,11 @@ export class APIClient {
 
     async update_note(id: string, note: Note): Promise<Response> {
         return this._put(`/api/v1/note/${id}`, note);
+    }
+
+    async search_note(query: string, limit: number): Promise<Note[]>  {
+        const req = this._get(`/api/v1/note?query=${query}&limit=${limit}`);
+        return req.then(resp => resp.json()) as Promise<Note[]>;
     }
 
     async _get(uri: string): Promise<Response> {

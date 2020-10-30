@@ -32,6 +32,12 @@ pub struct UpdateNoteRequest {
     pub contents: Vec<NoteContents>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct NoteQueryArgs {
+    pub query: String,
+    pub limit: u8
+}
+
 #[derive(Debug)]
 pub enum APIError {
     DatabaseError(String),
