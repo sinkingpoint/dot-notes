@@ -65,7 +65,6 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
     render(): ReactNode {
         const {className, placeholder} = this.props;
         const {contents, searchResults} = this.state;
-        const createOptionKey = `Create Page: ${contents}`;
         const regex = new RegExp(contents, "ig");
         const options = searchResults == [] ? [] : searchResults.map((note) => {
             let startIndex = 0;
@@ -97,7 +96,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
             });
 
             return <Option value={note.id} key={note.id}>
-                Go To: {parts}
+                <span className="search-prompt">Go To:</span> {parts}
             </Option>
         });
 
@@ -113,7 +112,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
                     showArrow={false}
                     filterOption={false}
                 >
-            {this.state.contents && <Option value="Create" key="Create">{createOptionKey}</Option>}
+            {this.state.contents && <Option value="Create" key="Create"><span className="search-prompt">Create Page:&nbsp;</span>{contents}</Option>}
             {options}
         </AutoComplete>;
     }

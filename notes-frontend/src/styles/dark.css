@@ -40,3 +40,8 @@ body {
     font-weight: bold;
     color: navy;
 }
+
+.search-prompt {
+    font-weight: bold;
+    color: green;
+}
