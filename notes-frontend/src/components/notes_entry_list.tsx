@@ -16,7 +16,7 @@ interface NotesEntryFormProps {
 
 interface AutoFocusProps{
   index: number[],
-  cursor: {start: number, end: number}
+  cursor: {start?: number, end?: number}
 }
 
 interface NotesEntryFormState {
@@ -63,7 +63,7 @@ function renderNoteData(data: NestedListData<Note>, indices: number[], autoFocus
       placeHolder={"Click to add content"} 
       content={data.value} key={data.key} 
       autoFocus={autoFocusIndices && arrayEquals(indices, autoFocusIndices.index) ? autoFocusIndices.cursor : undefined} 
-      {...props} 
+      {...props}
     />;
   }
 }
@@ -115,13 +115,29 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     const { data, nextKey } = keyify(props.initialData || new NestedList<string>(), 0);
     this.state = {
       lines: data as NestedList<Note>,
-      nextKey: nextKey
+      nextKey: nextKey,
+      toFocus: {
+        index: [0],
+        cursor: {
+          start: props.initialData.data.length > 0 ? (props.initialData.data[0] as string).length : 0,
+          end: props.initialData.data.length > 0 ? (props.initialData.data[0] as string).length : 0,
+        }
+      }
     };
 
     this.onNewLine = this.onNewLine.bind(this);
     this.onChange = this.onChange.bind(this);
     this.onBackspace = this.onBackspace.bind(this);
     this.onTab = this.onTab.bind(this);
+    this.onChangeFocus = this.onChangeFocus.bind(this);
+  }
+
+  onChangeFocus(newIndex: number[]) {
+    const toFocus = this.state.toFocus ? { index: newIndex, cursor: {}} : undefined;
+
+    this.setState({
+      toFocus: toFocus
+    });
   }
 
   onChange(indices: number[], newValue: string): void {
@@ -134,9 +150,11 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
 
     this.props.onChange && this.props.onChange(unkeyify(newLines));
 
+    const toFocus = this.state.toFocus ? { index: this.state.toFocus.index, cursor: {}} : undefined;
+
     this.setState({
       lines: newLines,
-      toFocus: undefined
+      toFocus: toFocus
     });
   }
 
@@ -224,7 +242,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
   }
 
   render(): ReactNode {
-    const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab});
+    const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab, onClick: this.onChangeFocus});
     return <div className={this.props.className}>{children}</div>;
   }
 }

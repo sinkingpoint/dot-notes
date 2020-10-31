@@ -7,8 +7,9 @@ export interface EditableListItemProps {
     className?: string,
     content?: string,
     placeHolder?: string,
-    autoFocus?: {start: number, end: number},
+    autoFocus?: {start?: number, end?: number},
     indices?: number[],
+    onClick?: (indices: number[]) => void;
     onChange?: (indices: number[], newValue: string) => void,
     onEnter?: (indices: number[]) => void;
     onDelete?: (indices: number[]) => void;
@@ -22,6 +23,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     super(props);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.onClick = this.onClick.bind(this);
   }
 
   onKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
@@ -44,26 +46,38 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     this.props.onChange && this.props.onChange(this.props.indices, e.target.value);
   }
 
+  onClick() {
+    this.props.onClick && this.props.onClick(this.props.indices);
+  }
+
   render(): ReactNode {
     const { className, placeHolder, content, autoFocus } = this.props;
     const rows = (content || "").split('\n').length;
     return (
       <li>
-        <TextArea
-          ref={ele => {
-            if(autoFocus !== undefined && ele) {
-              ele.focus();
-              ele.input.selectionStart = autoFocus.start;
-              ele.input.selectionEnd = autoFocus.end;
-            }
-          }}
-          className={`note_input ${className}`}
-          value={content}
-          placeholder={placeHolder}
-          onKeyDown={this.onKeyDown}
-          onChange={this.onChange}
-          bordered={false}
-        />
+        {autoFocus &&
+          <TextArea
+            ref={ele => {
+              if(autoFocus !== undefined && ele) {
+                ele.focus();
+                if(autoFocus.start && autoFocus.end){
+                  ele.input.selectionStart = autoFocus.start;
+                  ele.input.selectionEnd = autoFocus.end;
+                }
+              }
+            }}
+            className={`note_input ${className}`}
+            value={content}
+            onKeyDown={this.onKeyDown}
+            onChange={this.onChange}
+            onClick={this.onClick}
+            bordered={false}
+          />
+          ||
+          <div className={`note_input ${className}`} onClick={this.onClick}>
+              {content || placeHolder}
+          </div>
+        }
       </li>
     );
   }
