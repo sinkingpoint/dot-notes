@@ -1,5 +1,6 @@
 import React, { Component, ReactNode, RefObject } from 'react';
 import { Input } from 'antd';
+import ReactMarkdown from 'react-markdown'
 
 const TextArea = Input;
 
@@ -74,8 +75,10 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             bordered={false}
           />
           ||
-          <div className={`note_input ${className}`} onClick={this.onClick}>
-              {content || placeHolder}
+          <div onClick={this.onClick}>
+            <ReactMarkdown className={`ant-input ant-input-borderless note_input ${className}`}>
+                {content || placeHolder}
+            </ReactMarkdown>
           </div>
         }
       </li>

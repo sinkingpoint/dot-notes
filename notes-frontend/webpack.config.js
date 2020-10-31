@@ -29,10 +29,23 @@ module.exports = {
       {
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
+      },
+      {
+        test: /node_modules\/vfile\/core\.js/,
+        use: [{
+          loader: 'imports-loader',
+          options: {
+            type: 'commonjs',
+            imports: ['single process/browser process'],
+          },
+        }],
       }
     ]
   },
-  resolve: { extensions: ["*", ".js", ".jsx", ".ts", ".tsx"] },
+  resolve: {
+    fallback: { "path": require.resolve("path-browserify") },
+    extensions: ["*", ".js", ".jsx", ".ts", ".tsx"] 
+  },
   output: {
     path: path.resolve(__dirname, "dist/"),
     publicPath: "/dist/",
