@@ -2,7 +2,7 @@ import React, { Component, ReactNode, RefObject } from 'react';
 import { Input } from 'antd';
 import ReactMarkdown from 'react-markdown'
 
-const TextArea = Input;
+const { TextArea } = Input;
 
 export interface EditableListItemProps {
     className?: string,
@@ -27,7 +27,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     this.onClick = this.onClick.bind(this);
   }
 
-  onKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
+  onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>): void {
     const target = (e.target as HTMLInputElement);
     if(e.key == "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -43,7 +43,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     }
   }
 
-  onChange(e: React.ChangeEvent<HTMLInputElement>): void {
+  onChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
     this.props.onChange && this.props.onChange(this.props.indices, e.target.value);
   }
 
@@ -58,12 +58,13 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
       <li>
         {autoFocus &&
           <TextArea
+            autoSize
             ref={ele => {
               if(autoFocus !== undefined && ele) {
                 ele.focus();
                 if(autoFocus.start && autoFocus.end){
-                  ele.input.selectionStart = autoFocus.start;
-                  ele.input.selectionEnd = autoFocus.end;
+                  ele.resizableTextArea.textArea.selectionStart = autoFocus.start;
+                  ele.resizableTextArea.textArea.selectionEnd = autoFocus.end;
                 }
               }
             }}
@@ -75,10 +76,11 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             bordered={false}
           />
           ||
-          <div onClick={this.onClick}>
-            <ReactMarkdown className={`ant-input ant-input-borderless note_input ${className}`}>
-                {content || placeHolder}
+          <div onClick={this.onClick} className={`note_input ant-input ant-input-borderless`}>
+            {content && <ReactMarkdown>
+                {content}
             </ReactMarkdown>
+            || <p className="note-input-placeholder">{placeHolder}</p>}
           </div>
         }
       </li>
