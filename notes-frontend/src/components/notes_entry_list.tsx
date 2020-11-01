@@ -2,6 +2,7 @@ import React, { ReactNode, Component } from 'react';
 import { NoteContents } from '../api/client';
 import NestedList, { NestedListData } from '../utils/nested_list';
 import {EditableListItemProps, EditableListItem} from './editable_list_item';
+import { Position } from "../remark-extensions/utils";
 
 interface Note {
   value: string,
@@ -130,6 +131,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.onBackspace = this.onBackspace.bind(this);
     this.onTab = this.onTab.bind(this);
     this.onChangeFocus = this.onChangeFocus.bind(this);
+    this.onCheckbox = this.onCheckbox.bind(this);
   }
 
   onChangeFocus(newIndex: number[]) {
@@ -241,8 +243,45 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     });
   }
 
+  onCheckbox(indices: number[], checkboxMDPos: Position): void {
+    const newLines = this.state.lines.clone();
+
+    // Get the old line
+    const oldLine = newLines.get(indices);
+
+    if(oldLine instanceof NestedList) {
+      throw "Somethings gone wrong, we have a checklist inside a list?";
+    }
+    
+    // Our Position is in <row, column>, but we need a raw string index, so let's convert
+    const index = oldLine.value.split("\n").slice(0, checkboxMDPos.start.line-1).map(line => line.length).reduce((prev: number, len: number) => {
+      return prev + len + 1;
+    }, 0) + checkboxMDPos.start.column - 2; // -2 because the row + column are 1 indexed
+
+    let checkBoxStr = oldLine.value.substring(index, index+3);
+    if(checkBoxStr.length != 3 || checkBoxStr[0] != '[' || checkBoxStr[2] != ']') {
+      throw "Somethings gone wrong, we've found something, but it isn't a checkbox";
+    }
+
+    if(checkBoxStr[1] == ' ' || checkBoxStr[1] == '\t') {
+      checkBoxStr = '[x]';
+    }
+    else {
+      checkBoxStr = '[ ]';
+    }
+
+    oldLine.value = oldLine.value.substring(0, index) + checkBoxStr + oldLine.value.substring(index+3);
+    newLines.set(indices, oldLine);
+
+    this.props.onChange && this.props.onChange(unkeyify(newLines));
+
+    this.setState({
+      lines: newLines
+    });
+  }
+
   render(): ReactNode {
-    const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab, onClick: this.onChangeFocus});
+    const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab, onClick: this.onChangeFocus, onCheckbox: this.onCheckbox});
     return <div className={this.props.className}>{children}</div>;
   }
 }
