@@ -89,9 +89,11 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             bordered={false}
           />
           ||
+          // Note the replace here: We automatically add two spaces to the end of every line before rendering
+          // This is to fool the markdown parser into now joining lines
           <div onClick={this.onClick} className={`note_input ant-input ant-input-borderless`}>
             {content && <ReactMarkdown renderers={checkboxes_render(this.onCheckboxClick)} plugins={[checkboxes]} rawSourcePos={true}>
-                {content}
+              {content.replace(/\n/g, "  \n")}
             </ReactMarkdown>
             || <p className="note-input-placeholder">{placeHolder}</p>}
           </div>

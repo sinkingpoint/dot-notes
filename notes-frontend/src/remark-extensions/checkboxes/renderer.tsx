@@ -1,7 +1,7 @@
 import { createElement, ElementType } from "react";
 import { Position } from "../utils";
 
-export default (onClick: (e: React.ChangeEvent<HTMLInputElement>, pos: Position) => void): {[nodeType: string]: ElementType<unknown>} => {
+export default (onClick: (e: React.ChangeEvent<HTMLInputElement>, pos: Position) => void): {[nodeType: string]: ElementType<any>} => {
   return {
     checkbox: (props: { checked: boolean; sourcePosition: Position; }) => {
       const children = createElement('input', {
