@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, RefObject } from 'react';
 import { Input } from 'antd';
-import ReactMarkdown from 'react-markdown'
-
+import ReactMarkdown from 'react-markdown';
+import { plugin as checkboxes, render as checkboxes_render } from '../remark-extensions/checkboxes';
 const { TextArea } = Input;
 
 export interface EditableListItemProps {
@@ -77,7 +77,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
           />
           ||
           <div onClick={this.onClick} className={`note_input ant-input ant-input-borderless`}>
-            {content && <ReactMarkdown>
+            {content && <ReactMarkdown renderers={checkboxes_render} plugins={[checkboxes]}>
                 {content}
             </ReactMarkdown>
             || <p className="note-input-placeholder">{placeHolder}</p>}
