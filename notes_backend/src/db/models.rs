@@ -1,7 +1,7 @@
 use super::schema::notes;
 
 // DBNote represents a Note that can be loaded and inserted into
-// the database. 
+// the database.
 #[derive(Insertable, Queryable)]
 #[table_name = "notes"]
 pub struct DBNote {

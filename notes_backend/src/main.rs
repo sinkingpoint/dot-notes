@@ -5,6 +5,8 @@ extern crate diesel_migrations;
 
 extern crate chrono;
 
+extern crate env_logger;
+
 mod api;
 mod db;
 
@@ -14,6 +16,7 @@ use std::net::ToSocketAddrs;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let matches = App::new("notes-thing backend")
         .arg(
             Arg::with_name("listen")

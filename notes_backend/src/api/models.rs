@@ -23,7 +23,7 @@ pub struct NoteIDResult {
 
 #[derive(Deserialize, Debug)]
 pub struct NewNoteRequest {
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -35,12 +35,18 @@ pub struct UpdateNoteRequest {
 #[derive(Deserialize, Debug)]
 pub struct NoteQueryArgs {
     pub query: String,
-    pub limit: u8
+    pub limit: u8,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct APIErrorResponse<'a> {
+    pub message: &'a str,
 }
 
 #[derive(Debug)]
 pub enum APIError {
     DatabaseError(String),
+    NotFound,
     MalformedData,
 }
 
