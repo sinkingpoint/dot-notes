@@ -11,10 +11,10 @@ export default {
   }
 };
 
-function enterChecked(token: Token) {
+function enterChecked(token: Token): void {
   this.enter({type: 'checkbox', children: [], checked: token.type === "taskListCheckValueChecked"}, token)
 }
 
-function exitCheck(token: Token) {
+function exitCheck(token: Token): void {
   this.exit(token);
 }

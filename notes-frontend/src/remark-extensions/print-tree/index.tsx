@@ -1,12 +1,11 @@
-var visit = require('unist-util-visit');
+import { Node } from 'unist';
+import visit from 'unist-util-visit';
 
 export default function attacher() {
-  return transformer
-
-  function transformer(tree: any, file: any) {
+  return function transformer(tree: Node): void {
     visit(tree, 'root', visitor)
 
-    function visitor(node: any) {
+    function visitor(node: unknown) {
       console.log(node)
     }
   }

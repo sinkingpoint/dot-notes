@@ -35,7 +35,7 @@ export class APIClient {
         return fetch(this.apiBase + uri);
     }
 
-    async _post(uri: string, data?: any) {
+    async _post(uri: string, data?: unknown): Promise<Response> {
         const options: RequestInit = {
             method: 'POST',
             headers: {
@@ -50,7 +50,7 @@ export class APIClient {
         return fetch(this.apiBase + uri, options);
     }
 
-    async _put(uri: string, data?: any) {
+    async _put(uri: string, data?: unknown): Promise<Response> {
         const options: RequestInit = {
             method: 'PUT',
             headers: {

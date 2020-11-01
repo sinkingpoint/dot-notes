@@ -134,7 +134,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.onCheckbox = this.onCheckbox.bind(this);
   }
 
-  onChangeFocus(newIndex: number[]) {
+  onChangeFocus(newIndex: number[]): void{
     const toFocus = this.state.toFocus ? { index: newIndex, cursor: {}} : undefined;
 
     this.setState({
@@ -166,7 +166,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
       const newLines = this.state.lines.clone();
       newLines.delete(indices);
 
-      let newFocusIndex = indices.slice();
+      const newFocusIndex = indices.slice();
       while(newFocusIndex[newFocusIndex.length-1] == 0) {
         newFocusIndex.pop();
       }

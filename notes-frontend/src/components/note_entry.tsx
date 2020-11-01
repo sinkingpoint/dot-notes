@@ -30,7 +30,7 @@ class NotePage extends Component<NotePageProps, NotePageState> {
         this.updateAPINote = this.updateAPINote.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         const api = new APIClient();
         api.get_note(this.props.note_id).then(note => this.setState({
             note
@@ -51,7 +51,7 @@ class NotePage extends Component<NotePageProps, NotePageState> {
         });
     }
 
-    updateAPINote(note: Note) {
+    updateAPINote(note: Note): void {
         if(this.state.changeTimerID) {
             clearTimeout(this.state.changeTimerID);
         }

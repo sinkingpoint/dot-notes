@@ -51,7 +51,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     this.props.onChange && this.props.onChange(this.props.indices, e.target.value);
   }
 
-  onClick() {
+  onClick(): void {
     this.props.onClick && this.props.onClick(this.props.indices);
   }
 
@@ -67,7 +67,6 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
 
   render(): ReactNode {
     const { className, placeHolder, content, autoFocus } = this.props;
-    const rows = (content || "").split('\n').length;
     return (
       <li>
         {autoFocus &&

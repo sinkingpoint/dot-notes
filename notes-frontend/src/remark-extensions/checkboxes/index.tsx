@@ -10,11 +10,9 @@ import { Effects, Okay, NotOkay } from 'micromark/lib/shared-types';
 import fromMarkdown from "./fromMarkdown";
 import renderer from './renderer';
 
-export const plugin = checkbox;
 export const render = renderer;
-  
-function checkbox() {
-  var data = this.data();
+export const plugin = function checkbox(): void {
+  const data = this.data();
 
   add('micromarkExtensions', {
     text: {91: [{tokenize: tokenizeTasklistCheck}]}
@@ -22,7 +20,7 @@ function checkbox() {
 
   add('fromMarkdownExtensions', fromMarkdown);
 
-  function add(field: string, value: any) {
+  function add(field: string, value: unknown) {
     /* istanbul ignore if - other extensions. */
     if (data[field]) data[field].push(value);
     else data[field] = [value];
