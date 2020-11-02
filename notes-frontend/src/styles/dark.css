@@ -58,3 +58,13 @@ body {
     color: darkgrey;
     font-style: italic;
 }
+
+.search-field-link {
+    width: 200px;
+}
+
+.search-field-main {
+    margin: 15px !important;
+    width: 400px;
+    float: right;
+}

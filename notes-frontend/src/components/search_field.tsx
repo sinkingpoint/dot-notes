@@ -4,10 +4,19 @@ import { APIClient, Note } from '../api/client';
 
 const { Option } = AutoComplete;
 
+interface SearchFieldOption {
+    key: string;
+    prompt?: string;
+    text: string;
+}
+
 interface SearchFieldProps {
     placeholder?: string;
     className?: string;
-    onCreatePage?: (name: string) => void;
+    style?: React.CSSProperties;
+    searchPrompt?: string;
+    onSelect?: (contents: string, val: string) => void;
+    extraOptions?: (contents: string) => SearchFieldOption[];
 }
 
 interface SearchFieldState {
@@ -29,18 +38,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
     }
     
     onSelect(val: string): void {
-        if(val == "Create") {
-            const api = new APIClient();
-            api.create_note(this.state.contents).then(id => {
-                window.location.pathname = `/note/${id}`;
-            }).catch(e => {
-                console.log("Got an error creating a new page")
-                console.log(e);
-            });
-        }
-        else {
-            window.location.pathname = `/note/${val}`;
-        }
+        this.props.onSelect && this.props.onSelect(this.state.contents, val);
     }
 
     onSearch(val: string): void {
@@ -63,10 +61,17 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
     }
 
     render(): ReactNode {
-        const {className, placeholder} = this.props;
+        const {className, placeholder, style, searchPrompt, extraOptions} = this.props;
         const {contents, searchResults} = this.state;
         const regex = new RegExp(contents, "ig");
-        const options = searchResults == [] ? [] : searchResults.map((note) => {
+
+        const customOptions = extraOptions ? extraOptions(this.state.contents).map((option) => {
+            return <Option value={option.key} key={option.key}>
+                <span className="search-prompt">{option.prompt}</span>&nbsp;{option.text}
+            </Option>
+        }) : [];
+
+        const searchOptions = searchResults == [] ? [] : searchResults.map((note) => {
             let startIndex = 0;
             let parts = [];
             const title = note.title;
@@ -96,16 +101,13 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
             });
 
             return <Option value={note.id} key={note.id}>
-                <span className="search-prompt">Go To:</span> {parts}
+                <span className="search-prompt">{searchPrompt}</span> {parts}
             </Option>
         });
 
-        // Only show a create page link if a page with that name doesn't already exist
-        const allowCreatePage = !searchResults.map((note) => note.title).includes(contents);
-
         return <AutoComplete showSearch 
-                    placeholder={placeholder || "Search or Create"}
-                    style={{ width: 400, float: "right", margin: "15px" }}
+                    placeholder={placeholder}
+                    style={style}
                     className={className}
                     value={contents}
                     onSearch={this.onSearch}
@@ -115,8 +117,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
                     showArrow={false}
                     filterOption={false}
                 >
-            {this.state.contents && allowCreatePage && <Option value="Create" key="Create"><span className="search-prompt">Create Page:&nbsp;</span>{contents}</Option>}
-            {options}
+            {[...customOptions, ...searchOptions]}
         </AutoComplete>;
     }
 }
