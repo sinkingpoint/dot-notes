@@ -100,6 +100,9 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
             </Option>
         });
 
+        // Only show a create page link if a page with that name doesn't already exist
+        const allowCreatePage = !searchResults.map((note) => note.title).includes(contents);
+
         return <AutoComplete showSearch 
                     placeholder={placeholder || "Search or Create"}
                     style={{ width: 400, float: "right", margin: "15px" }}
@@ -112,7 +115,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
                     showArrow={false}
                     filterOption={false}
                 >
-            {this.state.contents && <Option value="Create" key="Create"><span className="search-prompt">Create Page:&nbsp;</span>{contents}</Option>}
+            {this.state.contents && allowCreatePage && <Option value="Create" key="Create"><span className="search-prompt">Create Page:&nbsp;</span>{contents}</Option>}
             {options}
         </AutoComplete>;
     }

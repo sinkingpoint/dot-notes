@@ -5,7 +5,7 @@ use super::api::Note;
 use chrono::prelude::*;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, Pool};
-pub use models::DBNote;
+pub use models::{DBNote, DBError};
 use rand::Rng;
 use schema::notes;
 
@@ -21,7 +21,7 @@ pub trait DBConnection {
     fn run_migrations(&self) -> Result<(), diesel_migrations::RunMigrationsError>;
 
     /// Creates a new note, with default values, returning the ID for futher editing
-    fn create_note(&self, name: String) -> Result<String, diesel::result::Error>;
+    fn create_note(&self, name: String) -> Result<String, DBError>;
 
     /// Updates the given note in the DB (identified by the ID in the Note)
     /// to match the given note
@@ -56,8 +56,19 @@ impl DBConnection for SQLLiteDBConnection {
         }
     }
 
-    fn create_note(&self, name: String) -> Result<String, diesel::result::Error> {
+    fn create_note(&self, name: String) -> Result<String, DBError> {
         let connection = self.pool.get().expect("Failed to get connection");
+
+        let existing_note = notes::table
+            .filter(notes::title.eq(&name))
+            .limit(1)
+            .load::<DBNote>(&connection)
+            .map(|res| res.into_iter().next())?;
+        
+        if existing_note.is_some() {
+            // Reject request to create a note with a title that already exists
+            return Err(DBError::AlreadyExists);
+        }
 
         // Generate an ID for the new note, which is 32 random characters from the below ranges
         let mut rng = rand::thread_rng();

@@ -21,6 +21,7 @@ pub async fn handle_rejection(
             APIError::DatabaseError(_) => ("Database Error", StatusCode::INTERNAL_SERVER_ERROR),
             APIError::MalformedData => ("Malformed Data", StatusCode::INTERNAL_SERVER_ERROR),
             APIError::NotFound => ("Not Found", StatusCode::NOT_FOUND),
+            APIError::AlreadyExists => ("Already Exists", StatusCode::CONFLICT)
         };
 
         msg = msg2;
@@ -104,7 +105,10 @@ async fn create_note(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     match db.create_note(req.name) {
         Ok(id) => Ok(warp::reply::json(&NoteIDResult { id })),
-        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
+        Err(e) => {
+            let api_error: APIError = e.into();
+            Err(warp::reject::custom(api_error))
+        }
     }
 }
 

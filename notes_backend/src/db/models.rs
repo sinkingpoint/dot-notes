@@ -23,3 +23,14 @@ pub struct DBNote {
     // The time that this note was last edited
     pub edate: i64,
 }
+
+pub enum DBError {
+    DBError(diesel::result::Error),
+    AlreadyExists
+}
+
+impl From<diesel::result::Error> for DBError {
+    fn from(e: diesel::result::Error) -> DBError {
+        DBError::DBError(e)
+    }
+}

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use warp::reject::Reject;
+use crate::db::DBError;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -48,6 +49,16 @@ pub enum APIError {
     DatabaseError(String),
     NotFound,
     MalformedData,
+    AlreadyExists
+}
+
+impl From<DBError> for APIError {
+    fn from(e: DBError) -> APIError {
+        match e {
+            DBError::DBError(e) => APIError::DatabaseError(e.to_string()),
+            DBError::AlreadyExists => APIError::AlreadyExists
+        }
+    }
 }
 
 impl Reject for APIError {}
