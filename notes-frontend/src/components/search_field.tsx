@@ -1,6 +1,7 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactNode, RefObject } from 'react';
 import { AutoComplete } from 'antd';
 import { APIClient, Note } from '../api/client';
+import Select, { SelectValue } from 'antd/lib/select';
 
 const { Option } = AutoComplete;
 
@@ -25,6 +26,7 @@ interface SearchFieldState {
 }
 
 class SearchField extends Component<SearchFieldProps, SearchFieldState> {
+    textBox: RefObject<Select<SelectValue>>;
     constructor(props: SearchFieldProps) {
         super(props);
 
@@ -57,6 +59,12 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
                 contents: val,
                 searchResults: []
             });
+        }
+    }
+
+    focus(): void {
+        if(this.textBox.current) {
+            this.textBox.current.focus();
         }
     }
 
@@ -105,7 +113,10 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
             </Option>
         });
 
-        return <AutoComplete showSearch 
+        return <AutoComplete showSearch
+                    ref={(ele) => {
+                        this.textBox = {current: ele};
+                    }}
                     placeholder={placeholder}
                     style={style}
                     className={className}

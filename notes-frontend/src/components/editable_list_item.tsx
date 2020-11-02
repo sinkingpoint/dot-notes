@@ -3,6 +3,8 @@ import { Input } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { plugin as checkboxes, render as checkboxes_render } from '../remark-extensions/checkboxes';
 import { Position } from "../remark-extensions/utils";
+import { position } from 'caret-pos';
+import SearchField from './search_field';
 
 const { TextArea } = Input;
 
@@ -20,8 +22,12 @@ export interface EditableListItemProps {
     onCheckbox?: (indices: number[], checkboxMDPos: Position) => void;
 }
 
-export class EditableListItem extends Component<EditableListItemProps, unknown> {
-  textInput: RefObject<Input>;
+interface EditableListItemState {
+  linkSearchMenu?: {pos: {top: number, left: number}}
+}
+
+export class EditableListItem extends Component<EditableListItemProps, EditableListItemState> {
+  textInput: RefObject<HTMLTextAreaElement>;
 
   constructor(props: EditableListItemProps) {
     super(props);
@@ -29,6 +35,9 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     this.onChange = this.onChange.bind(this);
     this.onClick = this.onClick.bind(this);
     this.onCheckboxClick = this.onCheckboxClick.bind(this);
+    this.onLinkAdd = this.onLinkAdd.bind(this);
+    this.textInput = null;
+    this.state = {};
   }
 
   onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>): void {
@@ -47,12 +56,28 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     }
   }
 
-  onChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
-    this.props.onChange && this.props.onChange(this.props.indices, e.target.value);
+  onChange(e: React.FormEvent<HTMLTextAreaElement>): void {
+    if(this.textInput.current) {
+      const value = this.textInput.current.value;
+      const event = e.nativeEvent as InputEvent;
+      const cursorPos = this.textInput.current.selectionStart;
+      if(cursorPos >= 2 && value[cursorPos-1] == '[' && value[cursorPos-2] == "[" && event.data == "[") {
+        this.setState({
+          linkSearchMenu: {
+            pos: position(this.textInput.current)
+          }
+        })
+      }
+      
+      this.props.onChange && this.props.onChange(this.props.indices, value);
+    }
   }
 
   onClick(): void {
     this.props.onClick && this.props.onClick(this.props.indices);
+    this.setState({
+      linkSearchMenu: null
+    });
   }
 
   // Called when a rendered checkbox in this item gets changed
@@ -65,8 +90,22 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
     onCheckbox && onCheckbox(indices, sourcePosition);
   }
 
+  onLinkAdd(contents: string, val: string): void {
+    const textArea = this.textInput.current;
+    const oldValue = textArea.value;
+    const newValue = oldValue.substring(0, textArea.selectionStart) + `id=${val}]]` + oldValue.substring(textArea.selectionStart);
+    this.props.onChange && this.props.onChange(this.props.indices, newValue);
+
+    textArea.focus();
+
+    this.setState({
+      linkSearchMenu: null
+    });
+  }
+
   render(): ReactNode {
     const { className, placeHolder, content, autoFocus } = this.props;
+    const { linkSearchMenu } = this.state;
     return (
       <li>
         {autoFocus &&
@@ -74,6 +113,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             autoSize
             ref={ele => {
               if(autoFocus !== undefined && ele) {
+                this.textInput = {current: ele.resizableTextArea.textArea};
                 ele.focus();
                 if(autoFocus.start && autoFocus.end){
                   ele.resizableTextArea.textArea.selectionStart = autoFocus.start;
@@ -84,7 +124,7 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             className={`note_input ${className}`}
             value={content}
             onKeyDown={this.onKeyDown}
-            onChange={this.onChange}
+            onInput={this.onChange}
             onClick={this.onClick}
             bordered={false}
           />
@@ -98,6 +138,26 @@ export class EditableListItem extends Component<EditableListItemProps, unknown> 
             || <p className="note-input-placeholder">{placeHolder}</p>}
           </div>
         }
+
+      {linkSearchMenu && 
+        <SearchField className='search-field-link'
+          ref={
+            (ele) => {
+              if(ele) {
+                ele.focus();
+              }
+            }
+          }
+          searchPrompt="Link"
+          style={{
+            position: "relative",
+            top: linkSearchMenu.pos.top,
+            left: linkSearchMenu.pos.left
+          }}
+          onSelect={this.onLinkAdd}
+          placeholder={"Search"}
+        />
+      }
       </li>
     );
   }
