@@ -3,10 +3,6 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-extern crate chrono;
-
-extern crate env_logger;
-
 mod api;
 mod db;
 

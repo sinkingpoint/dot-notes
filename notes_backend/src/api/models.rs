@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use warp::reject::Reject;
 use crate::db::DBError;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum NoteContents {
     Note(String),
@@ -37,6 +37,12 @@ pub struct UpdateNoteRequest {
 pub struct NoteQueryArgs {
     pub query: String,
     pub limit: u8,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NoteLink {
+    pub to_id: String,
+    pub from_note_index: Vec<usize>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -78,6 +84,24 @@ impl TryFrom<crate::db::DBNote> for Note {
             id: n.id,
             title: n.title,
             contents,
+        })
+    }
+}
+
+impl TryFrom<crate::db::DBNoteLink> for NoteLink {
+    type Error = APIError;
+
+    fn try_from(n: crate::db::DBNoteLink) -> Result<NoteLink, Self::Error> {
+        let index = match serde_json::from_str(&n.from_note_index) {
+            Ok(index) => index,
+            Err(_) => {
+                return Err(APIError::MalformedData);
+            }
+        };
+
+        Ok(NoteLink {
+            to_id: n.to_id,
+            from_note_index: index
         })
     }
 }

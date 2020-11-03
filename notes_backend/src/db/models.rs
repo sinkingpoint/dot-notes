@@ -1,4 +1,5 @@
-use super::schema::notes;
+use super::schema::{notes, note_links};
+use crate::api::NoteLink;
 
 // DBNote represents a Note that can be loaded and inserted into
 // the database.
@@ -22,6 +23,50 @@ pub struct DBNote {
 
     // The time that this note was last edited
     pub edate: i64,
+}
+
+
+// DBNote represents a Note that can be loaded and inserted into
+// the database.
+#[derive(Queryable)]
+pub struct DBNoteLink {
+    pub id: i32,
+    pub from_id: String,
+    pub to_id: String,
+    pub from_note_index: String
+}
+
+// DBNote represents a Note that can be loaded and inserted into
+// the database.
+#[derive(Insertable)]
+#[table_name = "note_links"]
+pub struct DBNoteLinkToInsert {
+    pub from_id: String,
+    pub to_id: String,
+    pub from_note_index: String
+}
+
+impl From<DBNoteLink> for DBNoteLinkToInsert {
+    fn from(link: DBNoteLink) -> DBNoteLinkToInsert {
+        DBNoteLinkToInsert {
+            from_id: link.from_id,
+            to_id: link.to_id,
+            from_note_index: link.from_note_index
+        }
+    }
+}
+
+impl From<(String, NoteLink)> for DBNoteLink {
+    fn from(dat: (String, NoteLink)) -> DBNoteLink {
+        let (from_id, link) = dat;
+
+        return DBNoteLink{
+            id: -1,
+            from_id: from_id,
+            to_id: link.to_id,
+            from_note_index: serde_json::to_string(&link.from_note_index).unwrap()
+        }
+    }
 }
 
 pub enum DBError {
