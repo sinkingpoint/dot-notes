@@ -1,9 +1,13 @@
 export type NoteContents = string | NoteContents[];
 
-export class Note {
+export interface Note {
     id?: string;
     title: string;
     contents: NoteContents[];
+}
+
+export class NoteLinkData {
+    links: {to_id: string, from_note_index: number[]}[];
 }
 
 const noteCache: {[id: string]: Note} = {};
@@ -24,6 +28,11 @@ export class APIClient {
             noteCache[note.id] = note;
             return note;
         });
+    }
+
+    async get_links(note_id: string): Promise<NoteLinkData> {
+        const req = this._get(`/api/v1/note/${note_id}/links`);
+        return (req.then(resp => resp.json()) as Promise<NoteLinkData>);
     }
 
     async create_note(name: string): Promise<string> {

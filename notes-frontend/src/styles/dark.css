@@ -79,3 +79,8 @@ body {
 .note-link-invalid {
     color: red;
 }
+
+.link-box {
+    background-color: royalblue;
+    padding: 15px;
+}
