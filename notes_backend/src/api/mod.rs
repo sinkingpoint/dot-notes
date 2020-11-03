@@ -2,7 +2,7 @@ mod models;
 
 pub use models::{
     APIError, APIErrorResponse, NewNoteRequest, Note, NoteContents, NoteIDResult, NoteQueryArgs,
-    UpdateNoteRequest, NoteLink
+    UpdateNoteRequest, NoteLink, GetNoteLinksResponse
 };
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
@@ -17,6 +17,7 @@ pub async fn handle_rejection(
 ) -> std::result::Result<impl warp::Reply, std::convert::Infallible> {
     let msg: &str;
     let code: StatusCode;
+    println!("CATS {:?}", err);
     if let Some(e) = err.find::<APIError>() {
         let (msg2, code2) = match e {
             APIError::DatabaseError(_) => ("Database Error", StatusCode::INTERNAL_SERVER_ERROR),
@@ -67,8 +68,13 @@ pub fn get_api(
     let search_note_path = warp::path!("note")
         .and(warp::get())
         .and(warp::query::<NoteQueryArgs>())
-        .and(with_db(db))
+        .and(with_db(db.clone()))
         .and_then(search_note);
+
+    let get_links_path = warp::path!("note" / String / "links")
+        .and(warp::get())
+        .and(with_db(db))
+        .and_then(get_links_to_note);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -86,7 +92,8 @@ pub fn get_api(
         get_note_path
             .or(create_note_path)
             .or(save_note_path)
-            .or(search_note_path),
+            .or(search_note_path)
+            .or(get_links_path),
     );
     paths
         .recover(handle_rejection)
@@ -204,6 +211,22 @@ async fn search_note(
                 .collect();
             Ok(warp::reply::json(&notes))
         }
+        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
+    }
+}
+
+async fn get_links_to_note(
+    id: String,
+    db: SQLLiteDBConnection,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.get_links_for_note(&id) {
+        Ok(links) => {
+            let links: Vec<NoteLink> = links.into_iter().map(|link| link.try_into().unwrap()).collect();
+
+            Ok(warp::reply::json(&GetNoteLinksResponse{
+                links: links
+            }))
+        },
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
     }
 }

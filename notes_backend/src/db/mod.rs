@@ -30,6 +30,9 @@ pub trait DBConnection {
     /// Gets the Note with the given ID
     fn get_note(&self, id: &str) -> Result<Option<DBNote>, diesel::result::Error>;
 
+    /// Gets all the links pointing to a given note
+    fn get_links_for_note(&self, id: &str) -> Result<Vec<DBNoteLink>, diesel::result::Error>;
+
     fn reconcile_note_links(&self, from_id: &str, links: Vec<NoteLink>) -> Result<(), diesel::result::Error>;
 
     fn search_notes(&self, query: String, limit: i64)
@@ -141,6 +144,13 @@ impl DBConnection for SQLLiteDBConnection {
             .limit(1)
             .load::<DBNote>(&connection)
             .map(|res| res.into_iter().next())
+    }
+
+    fn get_links_for_note(&self, id: &str) -> Result<Vec<DBNoteLink>, diesel::result::Error> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        note_links::table
+            .filter(note_links::to_id.eq(id))
+            .load::<DBNoteLink>(&connection)
     }
 
     fn search_notes(

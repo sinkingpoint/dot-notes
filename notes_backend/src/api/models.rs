@@ -39,10 +39,15 @@ pub struct NoteQueryArgs {
     pub limit: u8,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NoteLink {
     pub to_id: String,
     pub from_note_index: Vec<usize>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetNoteLinksResponse {
+    pub links: Vec<NoteLink>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -100,7 +105,7 @@ impl TryFrom<crate::db::DBNoteLink> for NoteLink {
         };
 
         Ok(NoteLink {
-            to_id: n.to_id,
+            to_id: n.from_id,
             from_note_index: index
         })
     }
