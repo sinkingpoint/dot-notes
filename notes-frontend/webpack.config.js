@@ -4,7 +4,8 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 module.exports = {
   entry: {
-    note_editor_page: "./src/note_editor_page.tsx"
+    note_editor_page: "./src/note_editor_page.tsx",
+    note_schedule_page: "./src/note_schedule_page.tsx"
   },
   mode: "development",
   module: {
@@ -58,8 +59,13 @@ module.exports = {
     hotOnly: true,
     proxy: {
       '/note': {
-        bypass: function(req) {
+        bypass: function() {
           return '/index.html';
+        }
+      },
+      '/config/schedule': {
+        bypass: function() {
+          return '/config.html';
         }
       }
     }

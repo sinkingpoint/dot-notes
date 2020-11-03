@@ -6,8 +6,8 @@ const { Sider, Content, Header } = Layout;
 import React, { Component, ReactNode } from 'react';
 import { APIClient, Note, NoteContents } from '../api/client';
 import NestedList from '../utils/nested_list';
-import NotesEntryForm from './notes_entry_list';
-import SearchField from './search_field';
+import NotesEntryForm from '../components/notes_entry_list';
+import SearchField from '../components/search_field';
 
 interface NotePageProps {
   note_id: string;
