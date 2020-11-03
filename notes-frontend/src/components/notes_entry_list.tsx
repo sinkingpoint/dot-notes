@@ -24,7 +24,6 @@ interface NotesEntryFormState {
   lines: NestedList<Note>;
   toFocus?: AutoFocusProps;
   nextKey: number;
-  needsRerender: boolean;
 }
 
 function arrayEquals(a1: number[], a2: number[]) {
@@ -117,15 +116,7 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     const { data, nextKey } = keyify(props.initialData || new NestedList<string>(), 0);
     this.state = {
       lines: data as NestedList<Note>,
-      nextKey: nextKey,
-      needsRerender: true,
-      toFocus: {
-        index: [0],
-        cursor: {
-          start: props.initialData.data.length > 0 ? (props.initialData.data[0] as string).length : 0,
-          end: props.initialData.data.length > 0 ? (props.initialData.data[0] as string).length : 0,
-        }
-      }
+      nextKey: nextKey
     };
 
     this.onNewLine = this.onNewLine.bind(this);
@@ -134,13 +125,19 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.onTab = this.onTab.bind(this);
     this.onChangeFocus = this.onChangeFocus.bind(this);
     this.onCheckbox = this.onCheckbox.bind(this);
+    this.onBlur = this.onBlur.bind(this);
+  }
+
+  onBlur(): void {
+    this.setState({
+      toFocus: null
+    });
   }
 
   onChangeFocus(newIndex: number[]): void{
-    const toFocus = this.state.toFocus ? { index: newIndex, cursor: {}} : undefined;
+    const toFocus = { index: newIndex, cursor: {}};
 
     this.setState({
-      needsRerender: true,
       toFocus: toFocus
     });
   }
@@ -158,7 +155,6 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     const toFocus = this.state.toFocus ? { index: this.state.toFocus.index, cursor: {}} : undefined;
 
     this.setState({
-      needsRerender: true,
       lines: newLines,
       toFocus: toFocus
     });
@@ -188,7 +184,6 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
       this.props.onChange && this.props.onChange(unkeyify(newLines));
 
       this.setState({
-        needsRerender: true,
         lines: newLines,
         toFocus: {
           index: newFocusIndex,
@@ -214,7 +209,6 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.props.onChange && this.props.onChange(unkeyify(newLines));
 
     this.setState({
-      needsRerender: true,
       nextKey: newNextKey,
       lines: newLines,
       toFocus: {
@@ -241,7 +235,6 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.props.onChange && this.props.onChange(unkeyify(newLines));
 
     this.setState({
-      needsRerender: true,
       lines: newLines,
       toFocus: {
         index: newIndex,
@@ -283,17 +276,13 @@ class NotesEntryForm extends Component<NotesEntryFormProps, NotesEntryFormState>
     this.props.onChange && this.props.onChange(unkeyify(newLines));
 
     this.setState({
-      needsRerender: true,
       lines: newLines
     });
   }
 
   render(): ReactNode {
-    this.setState({
-      needsRerender: false
-    });
     const children = renderNoteData(this.state.lines, [], this.state.toFocus, {onEnter: this.onNewLine, onChange: this.onChange, onDelete: this.onBackspace, onTab: this.onTab, onClick: this.onChangeFocus, onCheckbox: this.onCheckbox});
-    return <div className={this.props.className}>{children}</div>;
+    return <div className={this.props.className} onBlur={this.onBlur}>{children}</div>;
   }
 }
 

@@ -40,6 +40,10 @@ function tokenizeNoteLink(effects: Effects, ok: Okay, nok: NotOkay): State {
   }
 
   const body = function(code: number): void | State {
+    if (code === null) {
+      return nok(code)
+    }
+
     if(code !== 93 && size ++ < maxIDSize) {
       effects.consume(code);
       return body;

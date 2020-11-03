@@ -3,6 +3,7 @@ import { Input } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { plugin as checkboxes, render as checkboxes_render } from '../remark-extensions/checkboxes';
 import { plugin as note_link, render as note_link_render } from '../remark-extensions/note_link';
+import print_tree from '../remark-extensions/print-tree';
 import { Position } from "../remark-extensions/utils";
 import { position } from 'caret-pos';
 import SearchField from './search_field';
@@ -109,11 +110,11 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
     const { linkSearchMenu } = this.state;
     return (
       <li>
-        {autoFocus &&
+        {(autoFocus || linkSearchMenu) &&
           <TextArea
             autoSize
             ref={ele => {
-              if(autoFocus !== undefined && ele) {
+              if(autoFocus !== undefined && ele && !linkSearchMenu) {
                 this.textInput = {current: ele.resizableTextArea.textArea};
                 ele.focus();
                 if(autoFocus.start && autoFocus.end){
@@ -133,7 +134,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
           // Note the replace here: We automatically add two spaces to the end of every line before rendering
           // This is to fool the markdown parser into now joining lines
           <div onClick={this.onClick} className={`note_input ant-input ant-input-borderless`}>
-            {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link]} rawSourcePos={true}>
+            {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link, print_tree]} rawSourcePos={true}>
               {content.replace(/\n/g, "  \n")}
             </ReactMarkdown>
             || <p className="note-input-placeholder">{placeHolder}</p>}

@@ -15,7 +15,7 @@ function exitNoteLinkContents(token: Token): void {
 }
 
 function enterChecked(token: Token): void {
-  this.enter({type: 'noteLink'}, token)
+  this.enter({type: 'noteLink'}, token);
 }
 
 function exitCheck(token: Token): void {
