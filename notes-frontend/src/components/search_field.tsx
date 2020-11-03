@@ -16,7 +16,7 @@ interface SearchFieldProps {
     className?: string;
     style?: React.CSSProperties;
     searchPrompt?: string;
-    onSelect?: (contents: string, val: string) => void;
+    onSelect?: (contents: string, val: string, text: string) => void;
     extraOptions?: (contents: string) => SearchFieldOption[];
 }
 
@@ -39,8 +39,9 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
         this.onSelect = this.onSelect.bind(this);
     }
     
-    onSelect(val: string): void {
-        this.props.onSelect && this.props.onSelect(this.state.contents, val);
+    onSelect(val: string, e: any): void {
+        console.log(e);
+        this.props.onSelect && this.props.onSelect(this.state.contents, val, "");
     }
 
     onSearch(val: string): void {

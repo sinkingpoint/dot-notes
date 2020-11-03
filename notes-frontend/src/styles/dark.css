@@ -19,7 +19,7 @@ body {
 }
 
 .note-list .note-list {
-    border-left: 2px solid gray;
+    border-left: 1px solid gray;
 }
 
 .note-entry-page {
@@ -67,4 +67,15 @@ body {
     margin: 15px !important;
     width: 400px;
     float: right;
+}
+
+.note-link-bracket {
+    color: dodgerblue;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-left: 3px;
+}
+
+.note-link-invalid {
+    color: red;
 }

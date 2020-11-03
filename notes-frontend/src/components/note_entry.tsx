@@ -101,11 +101,10 @@ class NotePage extends Component<NotePageProps, NotePageState> {
                 </Header>
                 <Content className="note-entry-form">
                     { 
-                        this.state.note && 
-                        <span>
-                            <TextArea className="note-title" tabIndex={-1} defaultValue={this.state.note.title} bordered={false} onChange={this.onTitleChange} />
-                            <NotesEntryForm initialData={new NestedList<string>(this.state.note.contents)} onChange={this.onNoteChange} />
-                        </span>
+                        this.state.note && [
+                            <TextArea key="title" className="note-title" tabIndex={-1} defaultValue={this.state.note.title} bordered={false} onChange={this.onTitleChange} />,
+                            <NotesEntryForm key="entry" initialData={new NestedList<string>(this.state.note.contents)} onChange={this.onNoteChange} />
+                        ]
                     }
                 </Content>
             </Layout>

@@ -6,6 +6,8 @@ export class Note {
     contents: NoteContents[];
 }
 
+const noteCache: {[id: string]: Note} = {};
+
 export class APIClient {
     apiBase: string;
     constructor(apiBase?: string) {
@@ -13,8 +15,15 @@ export class APIClient {
     }
 
     async get_note(id: string): Promise<Note> {
+        if(noteCache[id]) {
+            return Promise.resolve(noteCache[id])
+        }
+
         const req = this._get(`/api/v1/note/${id}`);
-        return req.then(resp => resp.json()) as Promise<Note>;
+        return (req.then(resp => resp.json()) as Promise<Note>).then((note) => {
+            noteCache[note.id] = note;
+            return note;
+        });
     }
 
     async create_note(name: string): Promise<string> {
@@ -32,10 +41,17 @@ export class APIClient {
     }
 
     async _get(uri: string): Promise<Response> {
-        return fetch(this.apiBase + uri);
+        return fetch(this.apiBase + uri).then(resp => new Promise((resolve, reject) => {
+            if(resp.status >= 300 || resp.status < 200) {
+                reject(resp);
+            }
+            else {
+                resolve(resp);
+            }
+        }));
     }
 
-    async _post(uri: string, data?: unknown): Promise<Response> {
+    async _post(uri: string, data?: any): Promise<Response> {
         const options: RequestInit = {
             method: 'POST',
             headers: {

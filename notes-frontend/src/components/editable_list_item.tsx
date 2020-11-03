@@ -2,6 +2,7 @@ import React, { Component, ReactNode, RefObject } from 'react';
 import { Input } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { plugin as checkboxes, render as checkboxes_render } from '../remark-extensions/checkboxes';
+import { plugin as note_link, render as note_link_render } from '../remark-extensions/note_link';
 import { Position } from "../remark-extensions/utils";
 import { position } from 'caret-pos';
 import SearchField from './search_field';
@@ -93,7 +94,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
   onLinkAdd(contents: string, val: string): void {
     const textArea = this.textInput.current;
     const oldValue = textArea.value;
-    const newValue = oldValue.substring(0, textArea.selectionStart) + `id=${val}]]` + oldValue.substring(textArea.selectionStart);
+    const newValue = oldValue.substring(0, textArea.selectionStart) + `${val}]]` + oldValue.substring(textArea.selectionStart);
     this.props.onChange && this.props.onChange(this.props.indices, newValue);
 
     textArea.focus();
@@ -132,7 +133,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
           // Note the replace here: We automatically add two spaces to the end of every line before rendering
           // This is to fool the markdown parser into now joining lines
           <div onClick={this.onClick} className={`note_input ant-input ant-input-borderless`}>
-            {content && <ReactMarkdown renderers={checkboxes_render(this.onCheckboxClick)} plugins={[checkboxes]} rawSourcePos={true}>
+            {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link]} rawSourcePos={true}>
               {content.replace(/\n/g, "  \n")}
             </ReactMarkdown>
             || <p className="note-input-placeholder">{placeHolder}</p>}
@@ -151,7 +152,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
           searchPrompt="Link"
           style={{
             position: "relative",
-            top: linkSearchMenu.pos.top,
+            top: linkSearchMenu.pos.top-10,
             left: linkSearchMenu.pos.left
           }}
           onSelect={this.onLinkAdd}
