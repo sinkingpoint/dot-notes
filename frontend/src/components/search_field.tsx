@@ -39,8 +39,7 @@ class SearchField extends Component<SearchFieldProps, SearchFieldState> {
         this.onSelect = this.onSelect.bind(this);
     }
     
-    onSelect(val: string, e: any): void {
-        console.log(e);
+    onSelect(val: string): void {
         this.props.onSelect && this.props.onSelect(this.state.contents, val, "");
     }
 

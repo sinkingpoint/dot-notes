@@ -60,7 +60,7 @@ export class APIClient {
         }));
     }
 
-    async _post(uri: string, data?: any): Promise<Response> {
+    async _post(uri: string, data?: unknown): Promise<Response> {
         const options: RequestInit = {
             method: 'POST',
             headers: {
