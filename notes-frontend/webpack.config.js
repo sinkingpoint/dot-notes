@@ -45,7 +45,7 @@ module.exports = {
   },
   resolve: {
     fallback: { "path": require.resolve("path-browserify") },
-    extensions: ["*", ".js", ".jsx", ".ts", ".tsx"] 
+    extensions: ["*", ".js", ".jsx", ".ts", ".tsx"],
   },
   output: {
     path: path.resolve(__dirname, "dist/"),
@@ -58,14 +58,16 @@ module.exports = {
     publicPath: "http://localhost:3000",
     hotOnly: true,
     proxy: {
-      '/note': {
-        bypass: function() {
-          return '/index.html';
-        }
-      },
-      '/config/schedule': {
+      '/config': {
+        target: 'http://localhost:3000',
         bypass: function() {
           return '/config.html';
+        }
+      },
+      '/note': {
+        target: 'http://localhost:3000',
+        bypass: function() {
+          return '/index.html';
         }
       }
     }
@@ -76,6 +78,5 @@ module.exports = {
       minimize: true
     }),
     new webpack.optimize.AggressiveMergingPlugin(),
-    new BundleAnalyzerPlugin()
   ]
 };

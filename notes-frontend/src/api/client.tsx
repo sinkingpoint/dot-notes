@@ -15,7 +15,7 @@ const noteCache: {[id: string]: Note} = {};
 export class APIClient {
     apiBase: string;
     constructor(apiBase?: string) {
-        this.apiBase = apiBase || "http://localhost:3030";
+        this.apiBase = apiBase || "";
     }
 
     async get_note(id: string): Promise<Note> {

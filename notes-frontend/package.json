@@ -7,6 +7,7 @@
     "dev": "webpack --mode development",
     "build": "webpack --mode production",
     "serve": "webpack --mode development serve",
+    "serve-prod": "webpack --mode production serve",
     "lint": "eslint src/",
     "bundle-report": "webpack-bundle-analyzer --port 4200 compilation-stats.json"
   },
