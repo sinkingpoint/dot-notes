@@ -5,12 +5,15 @@
 // License: MIT
 // - https://github.com/micromark/micromark-extension-gfm-task-list-item/blob/main/license
 // - https://github.com/remarkjs/remark-gfm/blob/main/license
-import { State } from 'micromark/dist/shared-types';
+import { State, SyntaxExtension } from 'micromark/dist/shared-types';
 import { Effects, Okay, NotOkay } from 'micromark/lib/shared-types';
 import fromMarkdown from "./fromMarkdown";
 import renderer from './renderer';
 
 export const render = renderer;
+export const syntax = {
+  text: {91: {tokenize: tokenizeTasklistCheck}}
+} as unknown as SyntaxExtension;
 export const plugin = function checkbox(): void {
   const data = this.data();
 
