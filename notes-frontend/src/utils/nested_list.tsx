@@ -111,6 +111,10 @@ class NestedList<T> {
   }
 
   delete(indices: number[]): void {
+    if(indices.length > 0 && (indices[0] < 0 || indices[0] >= this.data.length)) {
+      throw `Index ${indices[0]} doesn't exist in list ${JSON.stringify(this.data)}`;
+    }
+
     if(indices.length == 1) {
       const lastIndex = indices[0];
       const front = (this.data as NestedListData<T>[]).slice(0, lastIndex);
@@ -134,6 +138,10 @@ class NestedList<T> {
   }
 
   nest(indices: number[]): number[] {
+    if(indices.length > 0 && (indices[0] < 0 || indices[0] >= this.data.length)) {
+      throw `Index ${indices[0]} doesn't exist in list ${JSON.stringify(this.data)}`;
+    }
+
     if(indices.length == 1) {
       const lastIndex = indices[0];
       const newData = this.data[lastIndex];
@@ -216,7 +224,7 @@ class NestedList<T> {
         return [parentIndex+1];
       }
       else {
-        console.error("Middle unnesting currently unsupported");
+        throw "Middle unnesting currently unsupported";
       }
     }
     else {
