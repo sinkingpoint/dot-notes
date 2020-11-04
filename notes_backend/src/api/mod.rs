@@ -1,4 +1,5 @@
 mod models;
+pub mod statics;
 
 pub use models::{
     APIError, APIErrorResponse, NewNoteRequest, Note, NoteContents, NoteIDResult, NoteQueryArgs,
@@ -17,7 +18,6 @@ pub async fn handle_rejection(
 ) -> std::result::Result<impl warp::Reply, std::convert::Infallible> {
     let msg: &str;
     let code: StatusCode;
-    println!("CATS {:?}", err);
     if let Some(e) = err.find::<APIError>() {
         let (msg2, code2) = match e {
             APIError::DatabaseError(_) => ("Database Error", StatusCode::INTERNAL_SERVER_ERROR),

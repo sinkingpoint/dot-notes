@@ -9,6 +9,7 @@ mod db;
 use clap::{App, Arg};
 use db::DBConnection;
 use std::net::ToSocketAddrs;
+use warp::Filter;
 
 #[tokio::main]
 async fn main() {
@@ -44,7 +45,7 @@ async fn main() {
         .expect("Failed to create pool");
     pool.run_migrations().expect("Failed to run migrations");
 
-    let routes = api::get_api(pool);
+    let routes = api::statics::get_static_routes().or(api::get_api(pool)).with(warp::compression::deflate());
 
     // Listen. Note that if the listen address expands to multiple IP addresses
     // we only listen on the first one, which might be stochastic depending on the auth
