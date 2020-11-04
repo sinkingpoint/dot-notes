@@ -1,5 +1,5 @@
 [package]
-name = "notes_backend"
+name = "dotnotes-backend"
 version = "0.1.0"
 authors = ["sinkingpoint <colin@quirl.co.nz>"]
 edition = "2018"

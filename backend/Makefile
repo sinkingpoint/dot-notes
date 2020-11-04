@@ -1,18 +1,18 @@
 .PHONY: bundle-dev bundle dev build cross-arm
 
 bundle-dev:
-	cd ../notes-frontend && npm run dev
+	cd ../frontend && npm run dev
 	mkdir -p bundles && rm -f bundles/*.js
-	cp ../notes-frontend/dist/*.js ./bundles
+	cp ../frontend/dist/*.js ./bundles
 
 bundle:
-	cd ../notes-frontend && npm run build
+	cd ../frontend && npm run build
 	mkdir -p bundles && rm -f bundles/*.js
-	cp ../notes-frontend/dist/*.js ./bundles
+	cp ../frontend/dist/*.js ./bundles
 
 dev: bundle-dev
 	cargo build
-	RUST_LOG="warp=debug" ./target/debug/notes_backend -l localhost:3030 &
+	RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
 	xdg-open http://localhost:3030
 
 build: bundle
