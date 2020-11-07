@@ -3,7 +3,7 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-mod api;
+mod routes;
 mod db;
 
 use clap::{App, Arg};
@@ -45,7 +45,7 @@ async fn main() {
         .expect("Failed to create pool");
     pool.run_migrations().expect("Failed to run migrations");
 
-    let routes = api::statics::get_static_routes().or(api::get_api(pool)).with(warp::compression::deflate());
+    let routes = routes::get_routes(pool).with(warp::compression::deflate());
 
     // Listen. Note that if the listen address expands to multiple IP addresses
     // we only listen on the first one, which might be stochastic depending on the auth

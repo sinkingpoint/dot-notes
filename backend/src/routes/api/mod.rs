@@ -1,5 +1,4 @@
 mod models;
-pub mod statics;
 
 pub use models::{
     APIError, APIErrorResponse, NewNoteRequest, Note, NoteContents, NoteIDResult, NoteQueryArgs,
@@ -12,37 +11,6 @@ use std::convert::TryInto;
 use warp::http::{header, Method, StatusCode};
 use warp::Filter;
 use regex::Regex;
-
-pub async fn handle_rejection(
-    err: warp::Rejection,
-) -> std::result::Result<impl warp::Reply, std::convert::Infallible> {
-    let msg: &str;
-    let code: StatusCode;
-    if let Some(e) = err.find::<APIError>() {
-        let (msg2, code2) = match e {
-            APIError::DatabaseError(_) => ("Database Error", StatusCode::INTERNAL_SERVER_ERROR),
-            APIError::MalformedData => ("Malformed Data", StatusCode::INTERNAL_SERVER_ERROR),
-            APIError::NotFound => ("Not Found", StatusCode::NOT_FOUND),
-            APIError::AlreadyExists => ("Already Exists", StatusCode::CONFLICT)
-        };
-
-        msg = msg2;
-        code = code2;
-    } else if let Some(_) = err.find::<warp::reject::InvalidQuery>() {
-        code = StatusCode::BAD_REQUEST;
-        msg = "Invalid Query";
-    } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
-        code = StatusCode::METHOD_NOT_ALLOWED;
-        msg = "Method Not Allowed";
-    } else {
-        code = StatusCode::BAD_REQUEST;
-        msg = "Unexpected Error";
-    }
-
-    let json = warp::reply::json(&APIErrorResponse { message: msg });
-
-    Ok(warp::reply::with_status(json, code))
-}
 
 pub fn get_api(
     db: SQLLiteDBConnection,
@@ -95,10 +63,7 @@ pub fn get_api(
             .or(search_note_path)
             .or(get_links_path),
     );
-    paths
-        .recover(handle_rejection)
-        .with(cors)
-        .with(warp::log("cats"))
+    paths.with(cors)
 }
 
 fn with_db(

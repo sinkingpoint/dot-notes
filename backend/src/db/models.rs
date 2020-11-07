@@ -1,5 +1,5 @@
 use super::schema::{notes, note_links};
-use crate::api::NoteLink;
+use crate::routes::api::NoteLink;
 
 // DBNote represents a Note that can be loaded and inserted into
 // the database.

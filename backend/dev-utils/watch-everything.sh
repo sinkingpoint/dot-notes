@@ -8,13 +8,14 @@ function cleanup() {
   exit 0
 }
 
-make dev
+make bundle-dev dev
 
 RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
 DOTNOTES_PID=$!
 
 stty -echoctl
 trap cleanup INT
+trap cleanup EXIT
 
 xdg-open http://localhost:3030
 

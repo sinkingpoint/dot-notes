@@ -1,4 +1,4 @@
-.PHONY: bundle-dev bundle dev build cross-arm
+.PHONY: bundle-dev bundle dev build cross-arm watch
 
 bundle-dev:
 	cd ../frontend && npm run dev
@@ -10,8 +10,8 @@ bundle:
 	mkdir -p bundles && rm -f bundles/*.js
 	cp ../frontend/dist/*.js ./bundles
 
-dev: bundle-dev
-	cargo build
+dev:
+	cargo build --no-default-features
 	
 build: bundle
 	cargo build --release

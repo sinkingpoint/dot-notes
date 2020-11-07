@@ -1,7 +1,7 @@
 mod models;
 mod schema;
 
-use super::api::{Note, NoteLink};
+use super::routes::api::{Note, NoteLink};
 pub use models::{DBNote, DBError, DBNoteLink, DBNoteLinkToInsert};
 use chrono::prelude::*;
 use diesel::prelude::*;

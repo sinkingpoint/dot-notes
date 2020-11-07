@@ -4,7 +4,13 @@ version = "0.1.0"
 authors = ["sinkingpoint <colin@quirl.co.nz>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["dotnotes_standalone"]
+
+# When set (the default), builds a production ready binary
+# That is statically linked to sqlite, and has the frontend artifacts
+# bundled inside
+dotnotes_standalone = ["libsqlite3-sys/bundled"]
 
 [dependencies]
 tokio = { version = "0.2", features = ["full"] }
@@ -18,4 +24,4 @@ diesel_migrations = "1.4.0"
 chrono = "0.4"
 env_logger = "0.8.1"
 regex = "1"
-libsqlite3-sys = { version = "*", features = ["bundled"] }
+libsqlite3-sys = { version = "*" }
