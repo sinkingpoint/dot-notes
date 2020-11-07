@@ -12,11 +12,12 @@ bundle:
 
 dev: bundle-dev
 	cargo build
-	RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
-	xdg-open http://localhost:3030
-
+	
 build: bundle
 	cargo build --release
 
 cross-arm: bundle
 	cross build --target armv7-unknown-linux-gnueabihf --release
+
+watch:
+	./dev-utils/watch-everything.sh
