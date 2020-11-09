@@ -25,3 +25,4 @@ chrono = "0.4"
 env_logger = "0.8.1"
 regex = "1"
 libsqlite3-sys = { version = "*" }
+futures = "0.3.7"

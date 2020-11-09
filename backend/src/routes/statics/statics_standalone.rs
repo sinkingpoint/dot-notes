@@ -2,12 +2,12 @@ use warp::Filter;
 use warp::reply::Response;
 use warp::http::header;
 
-static EDITOR_BUNDLE: &[u8] = include_bytes!("../../bundles/note_editor_page-bundle.js");
-static CONFIG_BUNDLE: &[u8] = include_bytes!("../../bundles/config_page-bundle.js");
+static EDITOR_BUNDLE: &[u8] = include_bytes!("../../../bundles/note_editor_page-bundle.js");
+static CONFIG_BUNDLE: &[u8] = include_bytes!("../../../bundles/config_page-bundle.js");
 
 // In Prod mode, we bundle the frontend into the binary (using the `include_bytes` above)
 // so we need to manually specify each "file"
-pub fn get_static_routes() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn get_routes() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let get_editor_bundle_path = warp::path!("dist" / "note_editor_page-bundle.js")
         .and(warp::get())
         .map(|| {

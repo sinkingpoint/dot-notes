@@ -45,10 +45,11 @@ async fn main() {
         .expect("Failed to create pool");
     pool.run_migrations().expect("Failed to run migrations");
 
-    let routes = routes::get_routes(pool).with(warp::compression::deflate());
+    let routes = routes::get_routes(pool);
 
-    // Listen. Note that if the listen address expands to multiple IP addresses
-    // we only listen on the first one, which might be stochastic depending on the auth
-    // resolver
-    warp::serve(routes).run(address[0]).await;
+    let futures = address.into_iter().map(move |addr| {
+        warp::serve(routes.clone()).run(addr)
+    });
+    
+    futures::future::join_all(futures).await;
 }
