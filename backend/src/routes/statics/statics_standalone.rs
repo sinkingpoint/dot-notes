@@ -3,7 +3,7 @@ use warp::reply::Response;
 use warp::http::header;
 
 static EDITOR_BUNDLE: &[u8] = include_bytes!("../../../bundles/note_editor_page-bundle.js");
-static CONFIG_BUNDLE: &[u8] = include_bytes!("../../../bundles/config_page-bundle.js");
+static CONFIG_BUNDLE: &[u8] = include_bytes!("../../../bundles/note_schedule_page-bundle.js");
 
 // In Prod mode, we bundle the frontend into the binary (using the `include_bytes` above)
 // so we need to manually specify each "file"

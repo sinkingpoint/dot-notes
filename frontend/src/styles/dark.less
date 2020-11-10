@@ -1,0 +1,59 @@
+@text-color: #c9c7c7;
+@main-background: #243e6d;
+@secondary-background: #353635;
+
+// @text-color: #eff0ef;
+// @main-background: #6388c7;
+// @secondary-background: #ffffff;
+
+@bullet: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='18' width='18'%3E%3Cline x1='0' y1='30' x2='5' y2='0' style='stroke:%237f90a8;stroke-width:2' /%3E%3Cline x1='5' y1='30' x2='10' y2='0' style='stroke:%237f90a8;stroke-width:2' /%3E%3Cline x1='10' y1='30' x2='15' y2='0' style='stroke:%237f90a8;stroke-width:2' /%3E%3C/svg%3E";
+
+.note-entry-form {
+  h1, h2, h3, h4, h5, p, div, span, .ant-input {
+    color: @text-color;
+    font-weight: bold;
+  }
+
+  background-color: @main-background;
+  min-height: 100vh;
+  padding-left: 30px;
+  padding-top: 30px;
+}
+
+.note-input {
+  resize: none;
+  vertical-align: middle !important;
+  padding: 4px 11px;
+  padding-left: 0;
+
+  p {
+    margin: 0;
+    min-height: 24px;
+    line-height: 1.5715;
+  }
+}
+
+.side-bar {
+  background-color: @secondary-background;
+}
+
+.note-input-placeholder {
+  font-style: italic;
+}
+
+ul.note-list{
+  list-style-image: url(@bullet);
+}
+
+.ant-input.note-title {
+  font-size: 3em;
+}
+
+.search-field {
+  width: 200px;
+  margin: 15px;
+}
+
+.search-field-main {
+  float: right;
+}

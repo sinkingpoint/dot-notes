@@ -106,7 +106,9 @@ class NotePage extends Component<NotePageProps, NotePageState> {
       </div>);
     }
     return <AppLayout>
+      <div className='note-entry-form'>
       {children}
+      </div>
     </AppLayout>;
   }
 }

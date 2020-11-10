@@ -5,7 +5,7 @@ import SearchField from "../components/search_field";
 const { Sider, Content, Header } = Layout;
 
 interface AppLayoutProps {
-  children: ReactElement[];
+  children: ReactElement | ReactElement[];
 }
 
 export default class AppLayout extends Component<AppLayoutProps> {
@@ -31,9 +31,9 @@ export default class AppLayout extends Component<AppLayoutProps> {
   
   render(): ReactElement {
     return <Layout className="note-entry-page">
-      <Sider breakpoint="lg" collapsedWidth="0">Sider</Sider>
+      <Sider breakpoint="lg" collapsedWidth="0" className="side-bar"></Sider>
       <Layout>
-        <Header>
+        <Header className="side-bar">
           <SearchField className='search-field search-field-main' searchPrompt="Go To: " onSelect={this.onNoteSearch} extraOptions={(contents) => {
             return contents ? [{
               key: "Create",
@@ -42,7 +42,7 @@ export default class AppLayout extends Component<AppLayoutProps> {
             }] : [];
           }}/>
         </Header>
-        <Content className="note-entry-form">
+        <Content>
           { this.props.children }
         </Content>
       </Layout>

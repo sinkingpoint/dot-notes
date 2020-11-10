@@ -9,7 +9,6 @@ mod db;
 use clap::{App, Arg};
 use db::DBConnection;
 use std::net::ToSocketAddrs;
-use warp::Filter;
 
 #[tokio::main]
 async fn main() {

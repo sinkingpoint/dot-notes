@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import NotePage from './pages/note_entry';
 
-import './styles/dark.css';
-import 'antd/dist/antd.css';
+import 'antd/dist/antd.less';
+import './styles/dark.less';
 
 const url_parts = window.location.pathname.split("/");
 const note_id = url_parts[url_parts.length-1];
