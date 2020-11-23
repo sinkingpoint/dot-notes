@@ -51,6 +51,12 @@ pub struct GetNoteLinksResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct GetRecentNotesQuery {
+    pub limit: i64,
+    pub offset: i64
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct APIErrorResponse<'a> {
     pub message: &'a str,
 }

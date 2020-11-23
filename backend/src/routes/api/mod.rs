@@ -2,7 +2,7 @@ mod models;
 
 pub use models::{
     APIError, APIErrorResponse, NewNoteRequest, Note, NoteContents, NoteIDResult, NoteQueryArgs,
-    UpdateNoteRequest, NoteLink, GetNoteLinksResponse
+    UpdateNoteRequest, NoteLink, GetNoteLinksResponse, GetRecentNotesQuery
 };
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
@@ -41,8 +41,14 @@ pub fn get_api(
 
     let get_links_path = warp::path!("note" / String / "links")
         .and(warp::get())
-        .and(with_db(db))
+        .and(with_db(db.clone()))
         .and_then(get_links_to_note);
+
+    let get_recent_notes_path = warp::path!("note" / "recent")
+        .and(warp::get())
+        .and(warp::query::<GetRecentNotesQuery>())
+        .and(with_db(db))
+        .and_then(get_recent_notes);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -61,7 +67,8 @@ pub fn get_api(
             .or(create_note_path)
             .or(save_note_path)
             .or(search_note_path)
-            .or(get_links_path),
+            .or(get_links_path)
+            .or(get_recent_notes_path),
     );
     paths.with(cors)
 }
@@ -191,6 +198,19 @@ async fn get_links_to_note(
             Ok(warp::reply::json(&GetNoteLinksResponse{
                 links: links
             }))
+        },
+        Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
+    }
+}
+
+async fn get_recent_notes(params: GetRecentNotesQuery, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.get_recent_notes(params.offset, params.limit) {
+        Ok(res) => {
+            let notes: Vec<Note> = res
+                .into_iter()
+                .map(|note| note.try_into().unwrap())
+                .collect();
+            Ok(warp::reply::json(&notes))
         },
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
     }

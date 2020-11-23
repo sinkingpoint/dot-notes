@@ -37,6 +37,8 @@ pub trait DBConnection {
 
     fn search_notes(&self, query: String, limit: i64)
         -> Result<Vec<DBNote>, diesel::result::Error>;
+
+    fn get_recent_notes(&self, offset: i64, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error>;
 }
 
 pub struct SQLLiteDBConnection {
@@ -167,6 +169,16 @@ impl DBConnection for SQLLiteDBConnection {
             .filter(upper(notes::title).like(query))
             .limit(limit);
 
+        db_query.load::<DBNote>(&connection)
+    }
+
+    fn get_recent_notes(&self, offset: i64, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        let db_query = notes::table
+            .order_by(notes::edate)
+            .offset(offset)
+            .limit(limit);
+        
         db_query.load::<DBNote>(&connection)
     }
 }

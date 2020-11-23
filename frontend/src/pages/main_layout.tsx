@@ -6,6 +6,7 @@ const { Sider, Content, Header } = Layout;
 
 interface AppLayoutProps {
   children: ReactElement | ReactElement[];
+  onScroll?: (event: React.UIEvent<HTMLDivElement, UIEvent>) => void;
 }
 
 export default class AppLayout extends Component<AppLayoutProps> {
@@ -31,7 +32,9 @@ export default class AppLayout extends Component<AppLayoutProps> {
   
   render(): ReactElement {
     return <Layout className="note-entry-page">
-      <Sider breakpoint="lg" collapsedWidth="0" className="side-bar"></Sider>
+      <Sider breakpoint="lg" collapsedWidth="0" className="side-bar">
+        <a href="/"><div className="logo" /></a>
+      </Sider>
       <Layout>
         <Header className="side-bar">
           <SearchField className='search-field search-field-main' searchPrompt="Go To: " onSelect={this.onNoteSearch} extraOptions={(contents) => {
@@ -42,7 +45,7 @@ export default class AppLayout extends Component<AppLayoutProps> {
             }] : [];
           }}/>
         </Header>
-        <Content>
+        <Content className="content" onScroll={this.props.onScroll}>
           { this.props.children }
         </Content>
       </Layout>

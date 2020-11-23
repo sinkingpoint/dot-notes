@@ -41,10 +41,10 @@ pub fn get_static_routes() -> impl Filter<Extract = impl warp::Reply, Error = wa
       resp
   });
 
-let get_config_page_path = warp::path!("config")
+let get_config_page_path = warp::path::end()
   .and(warp::get())
   .map(|| {
-      let resp_body: String = generate_html("note_editor_page-bundle.js").into();
+      let resp_body: String = generate_html("main_page-bundle.js").into();
       let mut resp = Response::new(resp_body);
       resp.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"));
       resp

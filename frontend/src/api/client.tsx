@@ -49,6 +49,11 @@ export class APIClient {
         return req.then(resp => resp.json()) as Promise<Note[]>;
     }
 
+    async get_recent_notes(offset: number, limit: number): Promise<Note[]> {
+        const req = this._get(`/api/v1/note/recent?offset=${offset}&limit=${limit}`);
+        return req.then(resp => resp.json()) as Promise<Note[]>;
+    }
+
     async _get(uri: string): Promise<Response> {
         return fetch(this.apiBase + uri).then(resp => new Promise((resolve, reject) => {
             if(resp.status >= 300 || resp.status < 200) {
