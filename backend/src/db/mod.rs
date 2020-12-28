@@ -2,12 +2,12 @@ mod models;
 mod schema;
 
 use super::routes::api::{Note, NoteLink};
-pub use models::{DBNote, DBError, DBNoteLink, DBNoteLinkToInsert};
 use chrono::prelude::*;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, Pool};
+pub use models::{DBError, DBNote, DBNoteLink, DBNoteLinkToInsert};
 use rand::Rng;
-use schema::{notes, note_links};
+use schema::{note_links, notes};
 
 embed_migrations!();
 
@@ -33,12 +33,20 @@ pub trait DBConnection {
     /// Gets all the links pointing to a given note
     fn get_links_for_note(&self, id: &str) -> Result<Vec<DBNoteLink>, diesel::result::Error>;
 
-    fn reconcile_note_links(&self, from_id: &str, links: Vec<NoteLink>) -> Result<(), diesel::result::Error>;
+    fn reconcile_note_links(
+        &self,
+        from_id: &str,
+        links: Vec<NoteLink>,
+    ) -> Result<(), diesel::result::Error>;
 
     fn search_notes(&self, query: String, limit: i64)
         -> Result<Vec<DBNote>, diesel::result::Error>;
 
-    fn get_recent_notes(&self, offset: i64, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error>;
+    fn get_recent_notes(
+        &self,
+        offset: i64,
+        limit: i64,
+    ) -> Result<Vec<DBNote>, diesel::result::Error>;
 }
 
 pub struct SQLLiteDBConnection {
@@ -71,7 +79,7 @@ impl DBConnection for SQLLiteDBConnection {
             .limit(1)
             .load::<DBNote>(&connection)
             .map(|res| res.into_iter().next())?;
-        
+
         if existing_note.is_some() {
             // Reject request to create a note with a title that already exists
             return Err(DBError::AlreadyExists);
@@ -113,27 +121,51 @@ impl DBConnection for SQLLiteDBConnection {
 
     // This commit takes a list of links from a given Note Page to others
     // and reconciles it with the DB, adding the missing and deleting the extraneous
-    fn reconcile_note_links(&self, from_id: &str, links: Vec<NoteLink>) -> Result<(), diesel::result::Error>{
+    fn reconcile_note_links(
+        &self,
+        from_id: &str,
+        links: Vec<NoteLink>,
+    ) -> Result<(), diesel::result::Error> {
         let connection = self.pool.get().expect("Failed to get connection");
         // Get all the links from the given ID
-        let current_links: Vec<DBNoteLink> = links.into_iter().map(|l| (from_id.to_owned(), l).into()).collect();
+        let current_links: Vec<DBNoteLink> = links
+            .into_iter()
+            .map(|l| (from_id.to_owned(), l).into())
+            .collect();
         let existing_links: Vec<DBNoteLink> = note_links::table
-                                                .filter(note_links::from_id.eq(from_id))
-                                                .load::<DBNoteLink>(&connection)?;
-        let to_remove_ids: Vec<i32> = existing_links.iter().filter(|link| {
-            current_links.iter().find(|l| { l.to_id == link.to_id && l.from_note_index == link.from_note_index}).is_none()
-        }).map(|link| link.id).collect();
+            .filter(note_links::from_id.eq(from_id))
+            .load::<DBNoteLink>(&connection)?;
+        let to_remove_ids: Vec<i32> = existing_links
+            .iter()
+            .filter(|link| {
+                current_links
+                    .iter()
+                    .find(|l| l.to_id == link.to_id && l.from_note_index == link.from_note_index)
+                    .is_none()
+            })
+            .map(|link| link.id)
+            .collect();
 
-        let to_add: Vec<DBNoteLink> = current_links.into_iter().filter(|link| {
-            existing_links.iter().find(|l| { l.to_id == link.to_id && l.from_note_index == link.from_note_index}).is_none()
-        }).collect();
+        let to_add: Vec<DBNoteLink> = current_links
+            .into_iter()
+            .filter(|link| {
+                existing_links
+                    .iter()
+                    .find(|l| l.to_id == link.to_id && l.from_note_index == link.from_note_index)
+                    .is_none()
+            })
+            .collect();
 
-        diesel::delete(note_links::table).filter(note_links::id.eq_any(to_remove_ids)).execute(&connection)?;
+        diesel::delete(note_links::table)
+            .filter(note_links::id.eq_any(to_remove_ids))
+            .execute(&connection)?;
 
         // SQLLite doesn't support multiple inserts, so we do them 1 by 1
         for link in to_add {
             let link: DBNoteLinkToInsert = link.into();
-            diesel::insert_into(note_links::table).values(link).execute(&connection)?;
+            diesel::insert_into(note_links::table)
+                .values(link)
+                .execute(&connection)?;
         }
 
         return Ok(());
@@ -172,13 +204,17 @@ impl DBConnection for SQLLiteDBConnection {
         db_query.load::<DBNote>(&connection)
     }
 
-    fn get_recent_notes(&self, offset: i64, limit: i64) -> Result<Vec<DBNote>, diesel::result::Error> {
+    fn get_recent_notes(
+        &self,
+        offset: i64,
+        limit: i64,
+    ) -> Result<Vec<DBNote>, diesel::result::Error> {
         let connection = self.pool.get().expect("Failed to get connection");
         let db_query = notes::table
             .order_by(notes::edate)
             .offset(offset)
             .limit(limit);
-        
+
         db_query.load::<DBNote>(&connection)
     }
 }

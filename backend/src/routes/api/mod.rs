@@ -1,16 +1,16 @@
 mod models;
 
 pub use models::{
-    APIError, APIErrorResponse, NewNoteRequest, Note, NoteContents, NoteIDResult, NoteQueryArgs,
-    UpdateNoteRequest, NoteLink, GetNoteLinksResponse, GetRecentNotesQuery
+    APIError, APIErrorResponse, GetNoteLinksResponse, GetRecentNotesQuery, NewNoteRequest, Note,
+    NoteContents, NoteIDResult, NoteLink, NoteQueryArgs, UpdateNoteRequest,
 };
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
+use regex::Regex;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use warp::http::{header, Method, StatusCode};
 use warp::Filter;
-use regex::Regex;
 
 pub fn get_api(
     db: SQLLiteDBConnection,
@@ -118,16 +118,21 @@ fn find_note_links(note_id: &str, note_data: &Vec<NoteContents>) -> Vec<NoteLink
     for (i, note) in note_data.iter().enumerate() {
         match note {
             NoteContents::Block(new_data) => {
-                links.append(&mut find_note_links(note_id.clone(), new_data).into_iter().map(|mut link| {
-                    link.from_note_index.push(i);
-                    return link;
-                }).collect());
-            },
+                links.append(
+                    &mut find_note_links(note_id.clone(), new_data)
+                        .into_iter()
+                        .map(|mut link| {
+                            link.from_note_index.push(i);
+                            return link;
+                        })
+                        .collect(),
+                );
+            }
             NoteContents::Note(data) => {
                 for link in re.captures_iter(data) {
-                    links.push(NoteLink{
+                    links.push(NoteLink {
                         to_id: link[1].to_owned(),
-                        from_note_index: vec![i]
+                        from_note_index: vec![i],
                     });
                 }
             }
@@ -136,10 +141,13 @@ fn find_note_links(note_id: &str, note_data: &Vec<NoteContents>) -> Vec<NoteLink
 
     // Indices are added in reverse order (Last first as we go back up the tree)
     // So here we reverse it back
-    links.into_iter().map(|mut link| {
-        link.from_note_index.reverse();
-        return link;
-    }).collect()
+    links
+        .into_iter()
+        .map(|mut link| {
+            link.from_note_index.reverse();
+            return link;
+        })
+        .collect()
 }
 
 // TODO: Make this able to save one note list chunk at a time, rather than the whole thing
@@ -153,16 +161,16 @@ async fn save_note(
         title: note.title,
         contents: note.contents.clone(),
     }) {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(e) => {
             return Err(warp::reject::custom(APIError::DatabaseError(e.to_string())));
-        },
+        }
     }
 
     let links = find_note_links(&id, &note.contents);
 
     match db.reconcile_note_links(&id, links) {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(e) => {
             return Err(warp::reject::custom(APIError::DatabaseError(e.to_string())));
         }
@@ -193,17 +201,21 @@ async fn get_links_to_note(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     match db.get_links_for_note(&id) {
         Ok(links) => {
-            let links: Vec<NoteLink> = links.into_iter().map(|link| link.try_into().unwrap()).collect();
+            let links: Vec<NoteLink> = links
+                .into_iter()
+                .map(|link| link.try_into().unwrap())
+                .collect();
 
-            Ok(warp::reply::json(&GetNoteLinksResponse{
-                links: links
-            }))
-        },
+            Ok(warp::reply::json(&GetNoteLinksResponse { links: links }))
+        }
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
     }
 }
 
-async fn get_recent_notes(params: GetRecentNotesQuery, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+async fn get_recent_notes(
+    params: GetRecentNotesQuery,
+    db: SQLLiteDBConnection,
+) -> Result<impl warp::Reply, warp::Rejection> {
     match db.get_recent_notes(params.offset, params.limit) {
         Ok(res) => {
             let notes: Vec<Note> = res
@@ -211,7 +223,7 @@ async fn get_recent_notes(params: GetRecentNotesQuery, db: SQLLiteDBConnection) 
                 .map(|note| note.try_into().unwrap())
                 .collect();
             Ok(warp::reply::json(&notes))
-        },
+        }
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
     }
 }

@@ -3,8 +3,8 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-mod routes;
 mod db;
+mod routes;
 
 use clap::{App, Arg};
 use db::DBConnection;
@@ -46,9 +46,9 @@ async fn main() {
 
     let routes = routes::get_routes(pool);
 
-    let futures = address.into_iter().map(move |addr| {
-        warp::serve(routes.clone()).run(addr)
-    });
-    
+    let futures = address
+        .into_iter()
+        .map(move |addr| warp::serve(routes.clone()).run(addr));
+
     futures::future::join_all(futures).await;
 }

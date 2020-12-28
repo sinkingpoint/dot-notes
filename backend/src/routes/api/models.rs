@@ -1,7 +1,7 @@
+use crate::db::DBError;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use warp::reject::Reject;
-use crate::db::DBError;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
@@ -42,18 +42,18 @@ pub struct NoteQueryArgs {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NoteLink {
     pub to_id: String,
-    pub from_note_index: Vec<usize>
+    pub from_note_index: Vec<usize>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetNoteLinksResponse {
-    pub links: Vec<NoteLink>
+    pub links: Vec<NoteLink>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetRecentNotesQuery {
     pub limit: i64,
-    pub offset: i64
+    pub offset: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -66,14 +66,14 @@ pub enum APIError {
     DatabaseError(String),
     NotFound,
     MalformedData,
-    AlreadyExists
+    AlreadyExists,
 }
 
 impl From<DBError> for APIError {
     fn from(e: DBError) -> APIError {
         match e {
             DBError::DBError(e) => APIError::DatabaseError(e.to_string()),
-            DBError::AlreadyExists => APIError::AlreadyExists
+            DBError::AlreadyExists => APIError::AlreadyExists,
         }
     }
 }
@@ -112,7 +112,7 @@ impl TryFrom<crate::db::DBNoteLink> for NoteLink {
 
         Ok(NoteLink {
             to_id: n.from_id,
-            from_note_index: index
+            from_note_index: index,
         })
     }
 }
