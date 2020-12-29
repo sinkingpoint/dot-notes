@@ -5,9 +5,11 @@ extern crate diesel_migrations;
 
 mod db;
 mod routes;
+mod schedule;
 
 use clap::{App, Arg};
 use db::DBConnection;
+use schedule::{NoteScheduler, Schedule};
 use std::net::ToSocketAddrs;
 
 #[tokio::main]
@@ -40,6 +42,8 @@ async fn main() {
         }
     };
 
+    let note_scheduler = NoteScheduler::new(vec![Schedule::new("test".to_owned(), "0 0 * * *").unwrap()]);
+
     let pool = db::SQLLiteDBConnection::new(matches.value_of("db").unwrap())
         .expect("Failed to create pool");
     pool.run_migrations().expect("Failed to run migrations");
@@ -50,5 +54,5 @@ async fn main() {
         .into_iter()
         .map(move |addr| warp::serve(routes.clone()).run(addr));
 
-    futures::future::join_all(futures).await;
+    tokio::join!(futures::future::join_all(futures), note_scheduler.run());
 }
