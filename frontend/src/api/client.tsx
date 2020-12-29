@@ -10,6 +10,12 @@ export class NoteLinkData {
     links: {to_id: string, from_note_index: number[]}[];
 }
 
+export interface NoteSchedule {
+    cron: string,
+    name: string,
+    active: boolean
+}
+
 const noteCache: {[id: string]: Note} = {};
 
 export class APIClient {

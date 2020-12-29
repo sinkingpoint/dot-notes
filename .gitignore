@@ -1,5 +1,5 @@
 *.sqllite
 bundles/
-backend/target/
-frontend/dist/
+backend/target/*
+frontend/dist/*
 frontend/node_modules/

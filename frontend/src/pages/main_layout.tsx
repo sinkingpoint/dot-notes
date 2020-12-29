@@ -2,9 +2,11 @@ import { Layout } from "antd";
 import React, { Component, ReactElement } from "react";
 import { APIClient } from "../api/client";
 import SearchField from "../components/search_field";
+import { SettingOutlined } from "@ant-design/icons";
 const { Sider, Content, Header } = Layout;
 
 interface AppLayoutProps {
+  menu?: ReactElement,
   children: ReactElement | ReactElement[];
   onScroll?: (event: React.UIEvent<HTMLDivElement, UIEvent>) => void;
 }
@@ -34,9 +36,10 @@ export default class AppLayout extends Component<AppLayoutProps> {
     return <Layout className="note-entry-page">
       <Sider breakpoint="lg" collapsedWidth="0" className="side-bar">
         <a href="/"><div className="logo" /></a>
+        {this.props.menu}
       </Sider>
       <Layout>
-        <Header className="side-bar">
+        <Header className="top-bar">
           <SearchField className='search-field search-field-main' searchPrompt="Go To: " onSelect={this.onNoteSearch} extraOptions={(contents) => {
             return contents ? [{
               key: "Create",
@@ -44,6 +47,7 @@ export default class AppLayout extends Component<AppLayoutProps> {
               text: contents
             }] : [];
           }}/>
+          <a href="/config"><SettingOutlined className="config-icon" /></a>
         </Header>
         <Content className="content" onScroll={this.props.onScroll}>
           { this.props.children }

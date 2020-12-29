@@ -21,7 +21,7 @@ class MainPage extends Component<unknown, MainPageState> {
     this.onScroll = this.onScroll.bind(this);
   }
 
-  fetchMoreRecent() {
+  fetchMoreRecent(): void {
     const api = new APIClient();
     if(!this.state.fetching) {
       this.setState({fetching: true});
@@ -35,7 +35,7 @@ class MainPage extends Component<unknown, MainPageState> {
     }
   }
 
-  onScroll() {
+  onScroll(): void {
     const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
     const body = document.body;
     const html = document.documentElement;

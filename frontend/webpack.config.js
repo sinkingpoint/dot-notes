@@ -5,7 +5,8 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 module.exports = {
   entry: {
     note_editor_page: "./src/note_editor_page.tsx",
-    main_page: "./src/main_page.tsx"
+    main_page: "./src/main_page.tsx",
+    config_page: "./src/config-page.tsx"
   },
   mode: "development",
   module: {
