@@ -123,7 +123,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
                 }
               }
             }}
-            className={`note-input` + className ? className : ""}
+            className={['note-input', className ? className : ""].join(" ")}
             value={content}
             onKeyDown={this.onKeyDown}
             onInput={this.onChange}
@@ -133,7 +133,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
           ||
           // Note the replace here: We automatically add two spaces to the end of every line before rendering
           // This is to fool the markdown parser into now joining lines
-          <div onClick={this.onClick} className={`note-input ant-input ant-input-borderless` + className ? className : ""} id={JSON.stringify(this.props.indices)}>
+          <div onClick={this.onClick} className={['note-input', 'ant-input', 'ant-input-borderless', className ? className : ""].join(' ')} id={JSON.stringify(this.props.indices)}>
             {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link]} rawSourcePos={true}>
               {content.replace(/\n/g, "  \n")}
             </ReactMarkdown>

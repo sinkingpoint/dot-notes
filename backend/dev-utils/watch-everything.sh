@@ -14,6 +14,7 @@ function cleanup() {
   exit 0
 }
 
+make dev
 make bundle-dev
 
 RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
