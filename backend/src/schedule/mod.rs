@@ -2,6 +2,8 @@ use saffron::{Cron, parse};
 use chrono::DateTime;
 use tokio::time::delay_for;
 
+use crate::db::{DBConnection, SQLLiteDBConnection};
+
 pub struct Schedule {
   name: String,
   cron: Cron
@@ -47,14 +49,25 @@ impl NoteScheduler {
     }
   }
 
-  pub async fn run(&self) {
+  pub async fn run(&self, db: SQLLiteDBConnection) {
     loop {
       if let Some((time, nexts)) = self.get_next_to_fire() {
         let diff = time.signed_duration_since(chrono::Utc::now());
+        println!("Waiting {} for next schedule", diff);
         delay_for(diff.to_std().unwrap()).await;
+
+        let now = chrono::Utc::now();
 
         for next in nexts {
           // Go through all the schedules that just fired and create their pages
+          let name = now.format(&next.name).to_string();
+          match db.create_note(name) {
+            Ok(_) => {},
+            Err(_) => {
+              // Silently skip if the name duplicates for now,
+              // TODO: Error logging
+            }
+          }
         }
       }
       else {

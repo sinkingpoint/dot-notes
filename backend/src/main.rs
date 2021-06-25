@@ -48,11 +48,11 @@ async fn main() {
         .expect("Failed to create pool");
     pool.run_migrations().expect("Failed to run migrations");
 
-    let routes = routes::get_routes(pool);
+    let routes = routes::get_routes(pool.clone());
 
     let futures = address
         .into_iter()
         .map(move |addr| warp::serve(routes.clone()).run(addr));
 
-    tokio::join!(futures::future::join_all(futures), note_scheduler.run());
+    tokio::join!(futures::future::join_all(futures), note_scheduler.run(pool));
 }
