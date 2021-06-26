@@ -1,15 +1,23 @@
 mod models;
 mod schema;
 
+use crate::schedule::is_valid_cron;
+
 use super::routes::api::{Note, NoteLink};
 use chrono::prelude::*;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, Pool};
-pub use models::{DBError, DBNote, DBNoteLink, DBNoteLinkToInsert};
+pub use models::*;
 use rand::Rng;
-use schema::{note_links, notes};
+use schema::{note_links, notes, schedule};
 
 embed_migrations!();
+
+no_arg_sql_function!(
+    last_insert_rowid,
+    diesel::sql_types::Integer,
+    "Represents the SQL last_insert_row() function"
+);
 
 sql_function!(fn upper(x: diesel::types::VarChar) -> diesel::types::VarChar);
 
@@ -32,6 +40,16 @@ pub trait DBConnection {
 
     /// Gets all the links pointing to a given note
     fn get_links_for_note(&self, id: &str) -> Result<Vec<DBNoteLink>, diesel::result::Error>;
+
+    /// Creates a new schedule, with the given title. Returns an error if schedule_cron isn't a valid cron expression
+    fn create_schedule<T: Into<DBScheduleToInsert>>(&self, to_insert: T) -> Result<i32, DBError>;
+
+    /// Gets a Vec containing all the schedules. TODO: Paginate this
+    fn get_all_schedules(&self) -> Result<Vec<DBSchedule>, DBError>;
+
+    /// Updates the given schedule in the DB (identified by the ID in the Schedule)
+    /// to match the given schedule
+    fn update_schedule<T: Into<DBSchedule>>(&self, schedule: T) -> Result<(), DBError>;
 
     fn reconcile_note_links(
         &self,
@@ -216,6 +234,50 @@ impl DBConnection for SQLLiteDBConnection {
             .limit(limit);
 
         db_query.load::<DBNote>(&connection)
+    }
+
+    /// Creates a new schedule, with the given title. Returns an error if schedule_cron isn't a valid cron expression
+    fn create_schedule<T: Into<DBScheduleToInsert>>(&self, to_insert: T) -> Result<i32, DBError> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        let to_insert: DBScheduleToInsert = to_insert.into();
+
+        if !is_valid_cron(&to_insert.schedule_cron) {
+            return Err(DBError::InvalidData);
+        }
+
+        diesel::insert_into(schedule::table)
+            .values(to_insert)
+            .execute(&connection)?;
+        
+        let id = diesel::select(last_insert_rowid)
+            .get_result::<i32>(&connection)?;
+
+        return Ok(id);
+    }
+
+    fn get_all_schedules(&self) -> Result<Vec<DBSchedule>, DBError> {
+        let connection = self.pool.get().expect("Failed to get connection");
+
+        return Ok(schedule::table.load::<DBSchedule>(&connection)?);
+    }
+
+    fn update_schedule<T: Into<DBSchedule>>(&self, schedule: T) -> Result<(), DBError> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        let schedule: DBSchedule = schedule.into();
+
+        if !is_valid_cron(&schedule.schedule_cron) {
+            return Err(DBError::InvalidData);
+        }
+
+        diesel::update(schedule::table)
+            .filter(schedule::id.eq(&schedule.id))
+            .set((schedule::title.eq(&schedule.title), 
+                        schedule::name_template.eq(&schedule.name_template),
+                        schedule::schedule_cron.eq(&schedule.schedule_cron),
+                        schedule::enabled.eq(&schedule.enabled),
+            ))
+            .execute(&connection)?;
+        Ok(())
     }
 }
 

@@ -1,9 +1,13 @@
 use saffron::{Cron, parse};
-use chrono::{Date, DateTime};
+use chrono::DateTime;
 use slog::Logger;
 use tokio::time::delay_for;
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
+
+pub fn is_valid_cron(cron: &str) -> bool {
+  cron.parse::<Cron>().is_ok()
+}
 
 pub struct Schedule {
   name: String,

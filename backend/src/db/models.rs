@@ -1,4 +1,4 @@
-use super::schema::{note_links, notes};
+use super::schema::{note_links, notes, schedule};
 use crate::routes::api::NoteLink;
 
 // DBNote represents a Note that can be loaded and inserted into
@@ -61,17 +61,36 @@ impl From<(String, NoteLink)> for DBNoteLink {
 
         return DBNoteLink {
             id: -1,
-            from_id: from_id,
+            from_id,
             to_id: link.to_id,
             from_note_index: serde_json::to_string(&link.from_note_index).unwrap(),
         };
     }
 }
 
+#[derive(Insertable)]
+#[table_name = "schedule"]
+pub struct DBScheduleToInsert {
+    pub title: String,
+    pub name_template: String,
+    pub schedule_cron: String,
+    pub enabled: bool
+}
+
+#[derive(Queryable)]
+pub struct DBSchedule {
+    pub id: i32,
+    pub title: String,
+    pub name_template: String,
+    pub schedule_cron: String,
+    pub enabled: bool
+}
+
 #[derive(Debug)]
 pub enum DBError {
     DBError(diesel::result::Error),
     AlreadyExists,
+    InvalidData
 }
 
 impl From<diesel::result::Error> for DBError {

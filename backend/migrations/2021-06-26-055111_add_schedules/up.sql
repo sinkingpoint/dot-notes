@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS schedule (
+    id INTEGER UNIQUE NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR NOT NULL,
+    name_template VARCHAR NOT NULL,
+    schedule_cron VARCHAR NOT NULL,
+    enabled BOOLEAN NOT NULL
+);

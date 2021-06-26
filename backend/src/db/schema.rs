@@ -18,4 +18,18 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(note_links, notes,);
+table! {
+    schedule (id) {
+        id -> Integer,
+        title -> Text,
+        name_template -> Text,
+        schedule_cron -> Text,
+        enabled -> Bool,
+    }
+}
+
+allow_tables_to_appear_in_same_query!(
+    note_links,
+    notes,
+    schedule,
+);

@@ -2,10 +2,11 @@ mod models;
 
 pub use models::{
     APIError, APIErrorResponse, GetNoteLinksResponse, GetRecentNotesQuery, NewNoteRequest, Note,
-    NoteContents, NoteIDResult, NoteLink, NoteQueryArgs, UpdateNoteRequest,
+    NoteContents, NoteIDResult, NoteLink, NoteQueryArgs, UpdateNoteRequest, NewScheduleRequest, NewScheduleResult
 };
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
+use crate::routes::api::models::APISchedule;
 use regex::Regex;
 use std::convert::TryFrom;
 use std::convert::TryInto;
@@ -47,8 +48,25 @@ pub fn get_api(
     let get_recent_notes_path = warp::path!("note" / "recent")
         .and(warp::get())
         .and(warp::query::<GetRecentNotesQuery>())
-        .and(with_db(db))
+        .and(with_db(db.clone()))
         .and_then(get_recent_notes);
+
+    let create_schedules_path = warp::path!("schedule")
+        .and(warp::post())
+        .and(warp::filters::body::json())
+        .and(with_db(db.clone()))
+        .and_then(create_schedule);
+
+    let update_schedules_path = warp::path!("schedule")
+        .and(warp::put())
+        .and(warp::filters::body::json())
+        .and(with_db(db.clone()))
+        .and_then(update_schedule);
+
+    let get_schedules_path = warp::path!("schedule")
+        .and(warp::get())
+        .and(with_db(db.clone()))
+        .and_then(get_schedules);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -68,7 +86,10 @@ pub fn get_api(
             .or(save_note_path)
             .or(search_note_path)
             .or(get_links_path)
-            .or(get_recent_notes_path),
+            .or(get_recent_notes_path)
+            .or(create_schedules_path)
+            .or(get_schedules_path)
+            .or(update_schedules_path),
     );
     paths.with(cors)
 }
@@ -225,5 +246,42 @@ async fn get_recent_notes(
             Ok(warp::reply::json(&notes))
         }
         Err(e) => Err(warp::reject::custom(APIError::DatabaseError(e.to_string()))),
+    }
+}
+
+async fn create_schedule(req: NewScheduleRequest, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.create_schedule(req) {
+        Ok(id) => Ok(warp::reply::json(&NewScheduleResult { id })),
+        Err(e) => {
+            let api_error: APIError = e.into();
+            Err(warp::reject::custom(api_error))
+        }
+    }
+}
+
+async fn update_schedule(req: APISchedule, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.update_schedule(req) {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(e) => {
+            let api_error: APIError = e.into();
+            Err(warp::reject::custom(api_error))
+        }
+    }
+}
+
+async fn get_schedules(db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection>  {
+    match db.get_all_schedules() {
+        Ok(schedules) => {
+            let schedules: Vec<APISchedule> = schedules
+                .into_iter()
+                .map(|note| note.try_into().unwrap())
+                .collect();
+            Ok(warp::reply::json(&schedules))
+        }
+        Err(err) => {
+            println!("GET SCHEDULES: {:?}", err);
+            let api_error: APIError = err.into();
+            Err(warp::reject::custom(api_error))
+        },
     }
 }

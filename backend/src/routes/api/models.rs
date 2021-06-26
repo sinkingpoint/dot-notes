@@ -1,4 +1,4 @@
-use crate::db::DBError;
+use crate::db::{DBError, DBSchedule, DBScheduleToInsert};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use warp::reject::Reject;
@@ -56,6 +56,76 @@ pub struct GetRecentNotesQuery {
     pub offset: i64,
 }
 
+#[derive(Serialize, Debug)]
+pub struct NewScheduleResult {
+    pub id: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct APISchedule {
+   pub id: i32,
+   pub title: String,
+   pub schedule_cron: String,
+   pub name_template: String,
+   pub enabled: bool,
+}
+
+impl From<APISchedule> for DBSchedule {
+    fn from(schedule: APISchedule) -> Self {
+        return DBSchedule {
+            id: schedule.id,
+            title: schedule.title,
+            schedule_cron: schedule.schedule_cron,
+            name_template: schedule.name_template,
+            enabled: schedule.enabled
+        }
+    }
+}
+
+impl From<DBSchedule> for APISchedule {
+    fn from(schedule: DBSchedule) -> Self {
+        return APISchedule {
+            id: schedule.id,
+            title: schedule.title,
+            schedule_cron: schedule.schedule_cron,
+            name_template: schedule.name_template,
+            enabled: schedule.enabled
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct NewScheduleRequest {
+    pub title: String,
+    pub schedule_cron: String,
+    pub name_template: String,
+}
+
+impl From<NewScheduleRequest> for DBScheduleToInsert {
+    fn from(schedule: NewScheduleRequest) -> Self {
+        return DBScheduleToInsert {
+            title: schedule.title,
+            name_template: schedule.name_template,
+            schedule_cron: schedule.schedule_cron,
+            enabled: true,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateScheduleRequest {
+    pub id: i32,
+    pub title: String,
+    pub schedule_cron: String,
+    pub name_template: String,
+    pub enabled: bool
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DeleteScheduleRequest {
+    pub id: i32
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct APIErrorResponse<'a> {
     pub message: &'a str,
@@ -74,6 +144,7 @@ impl From<DBError> for APIError {
         match e {
             DBError::DBError(e) => APIError::DatabaseError(e.to_string()),
             DBError::AlreadyExists => APIError::AlreadyExists,
+            DBError::InvalidData => APIError::MalformedData,
         }
     }
 }
