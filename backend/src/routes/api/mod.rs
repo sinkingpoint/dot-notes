@@ -83,7 +83,7 @@ async fn create_note(
     req: NewNoteRequest,
     db: SQLLiteDBConnection,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match db.create_note(req.name) {
+    match db.create_note(&req.name) {
         Ok(id) => Ok(warp::reply::json(&NoteIDResult { id })),
         Err(e) => {
             let api_error: APIError = e.into();

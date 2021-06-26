@@ -42,7 +42,7 @@ async fn main() {
         }
     };
 
-    let note_scheduler = NoteScheduler::new(vec![Schedule::new("test".to_owned(), "0 0 * * *").unwrap()]);
+    let note_scheduler = NoteScheduler::new(vec![Schedule::new("test-%M".to_owned(), "* * * * *").unwrap()]);
 
     let pool = db::SQLLiteDBConnection::new(matches.value_of("db").unwrap())
         .expect("Failed to create pool");

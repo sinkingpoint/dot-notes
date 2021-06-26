@@ -21,7 +21,7 @@ pub trait DBConnection {
     fn run_migrations(&self) -> Result<(), diesel_migrations::RunMigrationsError>;
 
     /// Creates a new note, with default values, returning the ID for futher editing
-    fn create_note(&self, name: String) -> Result<String, DBError>;
+    fn create_note(&self, name: &str) -> Result<String, DBError>;
 
     /// Updates the given note in the DB (identified by the ID in the Note)
     /// to match the given note
@@ -71,11 +71,11 @@ impl DBConnection for SQLLiteDBConnection {
         }
     }
 
-    fn create_note(&self, name: String) -> Result<String, DBError> {
+    fn create_note(&self, name: &str) -> Result<String, DBError> {
         let connection = self.pool.get().expect("Failed to get connection");
 
         let existing_note = notes::table
-            .filter(notes::title.eq(&name))
+            .filter(notes::title.eq(name))
             .limit(1)
             .load::<DBNote>(&connection)
             .map(|res| res.into_iter().next())?;
@@ -98,7 +98,7 @@ impl DBConnection for SQLLiteDBConnection {
         diesel::insert_into(notes::table)
             .values(DBNote {
                 id: new_id.clone(),
-                title: name,
+                title: name.to_owned(),
                 contents: "[\"\"]".to_owned(),
                 daily: false,
                 cdate: now,

@@ -68,6 +68,7 @@ impl From<(String, NoteLink)> for DBNoteLink {
     }
 }
 
+#[derive(Debug)]
 pub enum DBError {
     DBError(diesel::result::Error),
     AlreadyExists,

@@ -1,5 +1,5 @@
 use saffron::{Cron, parse};
-use chrono::DateTime;
+use chrono::{Date, DateTime};
 use tokio::time::delay_for;
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
@@ -40,9 +40,23 @@ impl NoteScheduler {
   }
 
   fn get_next_to_fire(&self) -> Option<(DateTime<chrono::Utc>, impl Iterator<Item=&Schedule>)> {
-    let min_time = self.schedules.iter().map(|s| s.get_next_time()).filter(|t| t.is_some()).map(|t| t.unwrap()).min();
-    if let Some(time) = min_time {
-      Some((time, self.schedules.iter().filter(move |s| s.get_next_time() == Some(time))))
+    let times: Vec<(&Schedule, DateTime<chrono::Utc>)> = self.schedules.iter().filter_map(|s| {
+      match s.get_next_time() {
+        Some(time) => Some((s, time)),
+        None => None
+      }
+    }).collect();
+
+    if let Some(&min_time) = times.iter().map(|(_, time)| time).min() {
+      let schedules = times.into_iter().filter_map(move |(s, time)| {
+        if time == min_time {
+          return Some(s);
+        }
+
+        return None;
+      });
+
+      return Some((min_time, schedules))
     }
     else {
       None
@@ -53,7 +67,8 @@ impl NoteScheduler {
     loop {
       if let Some((time, nexts)) = self.get_next_to_fire() {
         let diff = time.signed_duration_since(chrono::Utc::now());
-        println!("Waiting {} for next schedule", diff);
+        let nexts: Vec<&Schedule> = nexts.collect();
+        println!("Waiting {} for next schedule {} nots", diff, nexts.len());
         delay_for(diff.to_std().unwrap()).await;
 
         let now = chrono::Utc::now();
@@ -61,9 +76,12 @@ impl NoteScheduler {
         for next in nexts {
           // Go through all the schedules that just fired and create their pages
           let name = now.format(&next.name).to_string();
-          match db.create_note(name) {
-            Ok(_) => {},
-            Err(_) => {
+          match db.create_note(&name) {
+            Ok(_) => {
+              println!("Made note name {}", name);
+            },
+            Err(e) => {
+              println!("Error making note {} - {:?}", name, e);
               // Silently skip if the name duplicates for now,
               // TODO: Error logging
             }
