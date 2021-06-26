@@ -27,3 +27,8 @@ regex = "1"
 libsqlite3-sys = { version = "*" }
 futures = "0.3.7"
 saffron = { git = "https://github.com/cloudflare/saffron", branch = "main" }
+atty = "0.2"
+slog = "2.7.0"
+slog-async = "2.6.0"
+slog-term = "2.8.0"
+slog-json = "2.3.0"

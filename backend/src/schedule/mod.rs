@@ -1,5 +1,6 @@
 use saffron::{Cron, parse};
 use chrono::{Date, DateTime};
+use slog::Logger;
 use tokio::time::delay_for;
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
@@ -63,12 +64,12 @@ impl NoteScheduler {
     }
   }
 
-  pub async fn run(&self, db: SQLLiteDBConnection) {
+  pub async fn run(&self, log: Logger, db: SQLLiteDBConnection) {
     loop {
       if let Some((time, nexts)) = self.get_next_to_fire() {
         let diff = time.signed_duration_since(chrono::Utc::now());
         let nexts: Vec<&Schedule> = nexts.collect();
-        println!("Waiting {} for next schedule {} nots", diff, nexts.len());
+        info!(log, "Waiting {} to create {} notes", diff, nexts.len());
         delay_for(diff.to_std().unwrap()).await;
 
         let now = chrono::Utc::now();
@@ -77,13 +78,9 @@ impl NoteScheduler {
           // Go through all the schedules that just fired and create their pages
           let name = now.format(&next.name).to_string();
           match db.create_note(&name) {
-            Ok(_) => {
-              println!("Made note name {}", name);
-            },
+            Ok(_) => {},
             Err(e) => {
-              println!("Error making note {} - {:?}", name, e);
-              // Silently skip if the name duplicates for now,
-              // TODO: Error logging
+              error!(log, "Failed to create note `{}`: {:?}", name, e);
             }
           }
         }
