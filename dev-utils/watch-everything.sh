@@ -17,7 +17,7 @@ function cleanup() {
 make dev
 make bundle-dev
 
-RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
+RUST_LOG="warp=debug" backend/target/debug/dotnotes-backend -l localhost:3030 &
 
 stty -echoctl
 trap cleanup INT
@@ -25,12 +25,12 @@ trap cleanup EXIT
 
 xdg-open http://localhost:3030
 
-inotifywait -m -e create,delete,modify -r ../frontend/webpack.config.js ../frontend/src ./src | while read dir ev file; do
+inotifywait -m -e create,delete,modify -r frontend/webpack.config.js frontend/src backend/src | while read dir ev file; do
   if echo "${dir}" | grep "frontend"; then
     kill_all_background_jobs
     make bundle-dev &
   else
     kill_all_background_jobs
-    make dev && RUST_LOG="warp=debug" ./target/debug/dotnotes-backend -l localhost:3030 &
+    make dev && RUST_LOG="warp=debug" backend/target/debug/dotnotes-backend -l localhost:3030 &
   fi
 done
