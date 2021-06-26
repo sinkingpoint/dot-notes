@@ -4,9 +4,11 @@ pub use models::{
     APIError, APIErrorResponse, GetNoteLinksResponse, GetRecentNotesQuery, NewNoteRequest, Note,
     NoteContents, NoteIDResult, NoteLink, NoteQueryArgs, UpdateNoteRequest, NewScheduleRequest, NewScheduleResult
 };
+use tokio::sync::mpsc;
 
 use crate::db::{DBConnection, SQLLiteDBConnection};
 use crate::routes::api::models::APISchedule;
+use crate::schedule::Schedule;
 use regex::Regex;
 use std::convert::TryFrom;
 use std::convert::TryInto;
@@ -15,6 +17,7 @@ use warp::Filter;
 
 pub fn get_api(
     db: SQLLiteDBConnection,
+    schedule_change_tx: mpsc::Sender<(Schedule, bool)>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // TODO: Make CORS less permissive
     let get_note_path = warp::path!("note" / String)
@@ -55,12 +58,14 @@ pub fn get_api(
         .and(warp::post())
         .and(warp::filters::body::json())
         .and(with_db(db.clone()))
+        .and(with_scheduler(schedule_change_tx.clone()))
         .and_then(create_schedule);
 
     let update_schedules_path = warp::path!("schedule")
         .and(warp::put())
         .and(warp::filters::body::json())
         .and(with_db(db.clone()))
+        .and(with_scheduler(schedule_change_tx))
         .and_then(update_schedule);
 
     let get_schedules_path = warp::path!("schedule")
@@ -98,6 +103,12 @@ fn with_db(
     db: SQLLiteDBConnection,
 ) -> impl Filter<Extract = (SQLLiteDBConnection,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || db.clone())
+}
+
+fn with_scheduler(
+    scheduler: mpsc::Sender<(Schedule, bool)>,
+) -> impl Filter<Extract = (mpsc::Sender<(Schedule, bool)>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || scheduler.clone())
 }
 
 async fn create_note(
@@ -249,9 +260,13 @@ async fn get_recent_notes(
     }
 }
 
-async fn create_schedule(req: NewScheduleRequest, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
-    match db.create_schedule(req) {
-        Ok(id) => Ok(warp::reply::json(&NewScheduleResult { id })),
+async fn create_schedule(req: NewScheduleRequest, db: SQLLiteDBConnection, mut scheduler: mpsc::Sender<(Schedule, bool)>) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.create_schedule(req.clone()) {
+        Ok(id) => {
+            let schedule = Schedule::new(id, req.name_template, &req.schedule_cron, true).unwrap();
+            match scheduler.send((schedule, true)).await {_ => {}};
+            Ok(warp::reply::json(&NewScheduleResult { id }))
+        },
         Err(e) => {
             let api_error: APIError = e.into();
             Err(warp::reject::custom(api_error))
@@ -259,9 +274,13 @@ async fn create_schedule(req: NewScheduleRequest, db: SQLLiteDBConnection) -> Re
     }
 }
 
-async fn update_schedule(req: APISchedule, db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp::Rejection> {
-    match db.update_schedule(req) {
-        Ok(_) => Ok(StatusCode::NO_CONTENT),
+async fn update_schedule(req: APISchedule, db: SQLLiteDBConnection, mut scheduler: mpsc::Sender<(Schedule, bool)>) -> Result<impl warp::Reply, warp::Rejection> {
+    match db.update_schedule(req.clone()) {
+        Ok(_) => {
+            let schedule = Schedule::new(req.id, req.name_template, &req.schedule_cron, true).unwrap();
+            match scheduler.send((schedule, true)).await {_ => {}};
+            Ok(StatusCode::NO_CONTENT)
+        },
         Err(e) => {
             let api_error: APIError = e.into();
             Err(warp::reject::custom(api_error))

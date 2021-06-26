@@ -61,7 +61,7 @@ pub struct NewScheduleResult {
     pub id: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct APISchedule {
    pub id: i32,
    pub title: String,
@@ -94,7 +94,7 @@ impl From<DBSchedule> for APISchedule {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewScheduleRequest {
     pub title: String,
     pub schedule_cron: String,

@@ -1,8 +1,9 @@
 use std::convert::Infallible;
 
+use tokio::sync::mpsc;
 use warp::{hyper::StatusCode, Filter};
 
-use crate::db::SQLLiteDBConnection;
+use crate::{db::SQLLiteDBConnection, schedule::Schedule};
 
 use self::api::{APIError, APIErrorResponse};
 
@@ -43,8 +44,9 @@ pub async fn handle_rejection(err: warp::Rejection) -> Result<impl warp::Reply, 
 
 pub fn get_routes(
     db: SQLLiteDBConnection,
+    schedule_change_tx: mpsc::Sender<(Schedule, bool)>
 ) -> impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone {
     statics::get_static_routes()
-        .or(api::get_api(db))
+        .or(api::get_api(db, schedule_change_tx))
         .recover(handle_rejection)
 }

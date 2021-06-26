@@ -63,7 +63,7 @@ async fn main() {
 
     info!(log, "Listening on: {:?}", address);
 
-    let note_scheduler = NoteScheduler::new(vec![Schedule::new("test-%M".to_owned(), "* * * * *").unwrap()]);
+    let (mut note_scheduler, tx) = NoteScheduler::new();
 
     let pool = match db::SQLLiteDBConnection::new(matches.value_of("db").unwrap()) {
         Ok(p) => p,
@@ -81,7 +81,7 @@ async fn main() {
         }
     };
 
-    let routes = routes::get_routes(pool.clone());
+    let routes = routes::get_routes(pool.clone(), tx);
 
     let futures = address
         .into_iter()
