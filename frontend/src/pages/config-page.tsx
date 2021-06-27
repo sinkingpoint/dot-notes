@@ -5,6 +5,8 @@ import { SelectInfo } from 'rc-menu/lib/interface';
 import React, { Component, ReactNode } from 'react';
 import AppLayout from './main_layout';
 import { ScheduledNoteGrid } from '../components/scheduled_grid';
+import { ScheduledNoteCreateForm } from '../components/schedule_note_create_form';
+import CreateSchedulePage from './create-schedule-page';
 
 interface ConfigPageState {
   page: "looks" | "scheduled"
@@ -35,25 +37,7 @@ class ConfigPage extends Component<unknown, ConfigPageState> {
       </div>;
     }
     else if(this.state.page == "scheduled"){
-      form = <div className="schedule-form">
-        <h2>Scheduled Notes</h2>
-        <Row>
-          <Col xs={{ span: 5 }} lg={{ span: 6 }}>
-            <Input placeholder="Cron" />
-            <span>How often to create the page</span>
-          </Col>
-
-          <Col xs={{ span: 5, offset: 1 }} lg={{ span: 6, offset: 2 }}>
-            <Input placeholder="Name" />
-            <span>The name of the page to create</span>
-          </Col>
-        </Row>
-
-        <Divider />
-
-        <ScheduledNoteGrid />
-        {}
-      </div>;
+      form = <CreateSchedulePage />
     }
     return <AppLayout menu={
       <Menu

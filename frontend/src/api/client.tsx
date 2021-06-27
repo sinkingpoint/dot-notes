@@ -11,9 +11,11 @@ export class NoteLinkData {
 }
 
 export interface NoteSchedule {
-    cron: string,
-    name: string,
-    active: boolean
+    id: number,
+    title: string,
+    schedule_cron: string,
+    name_template: string,
+    enabled: boolean
 }
 
 const noteCache: {[id: string]: Note} = {};
@@ -60,6 +62,17 @@ export class APIClient {
         return req.then(resp => resp.json()) as Promise<Note[]>;
     }
 
+    async get_schedules(): Promise<NoteSchedule[]> {
+        const req = this._get(`/api/v1/schedule`);
+        return req.then(resp => resp.json()) as Promise<NoteSchedule[]>;
+    }
+
+    async create_schedule(sched: {title: string, schedule_cron: string, name_template: string}): Promise<number> {
+        const data = {title: sched.title, schedule_cron: sched.schedule_cron, name_template: sched.name_template};
+        const req = this._post(`/api/v1/schedule`, data);
+        return req.then(resp => resp.json()).then(j => j['id']);
+    }
+
     async _get(uri: string): Promise<Response> {
         return fetch(this.apiBase + uri).then(resp => new Promise((resolve, reject) => {
             if(resp.status >= 300 || resp.status < 200) {
@@ -82,6 +95,9 @@ export class APIClient {
         if(data !== undefined) {
             options['body'] = JSON.stringify(data);
         }
+
+        console.log(data);
+        console.log(options);
 
         return fetch(this.apiBase + uri, options);
     }

@@ -13,9 +13,7 @@ interface NoteLinkState {
 export class NoteLink extends Component<NoteLinkProps, NoteLinkState> {
   constructor(props: NoteLinkProps) {
     super(props);
-    this.state = {
-
-    };
+    this.state = {};
   }
 
   componentDidMount(): void {
