@@ -152,14 +152,12 @@ impl NoteScheduler {
           }
         }
 
-        shutdowntx.send(true).await;
+        shutdowntx.send(true).await.expect("Failed to send shutdown");
       }
     });
 
     loop {
       let run_loop = self.schedule_loop(log.clone(), db.clone(), schedules.clone());
-
-      println!("Made run loop");
 
       // Select on the shutdownrx so that we recreate the schedule loop when a change happens
       tokio::select! {

@@ -11,7 +11,7 @@ mod schedule;
 
 use clap::{App, Arg};
 use db::DBConnection;
-use schedule::{NoteScheduler, Schedule};
+use schedule::NoteScheduler;
 use std::net::ToSocketAddrs;
 
 use atty::Stream;
