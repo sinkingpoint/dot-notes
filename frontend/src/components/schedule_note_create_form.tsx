@@ -1,7 +1,8 @@
 import { Button, Col, Input, Row } from "antd";
-import React, { ReactNode } from "react";
+import React, { ChangeEvent, ReactNode } from "react";
 import { Component } from "react";
 import { APIClient, NoteSchedule } from "../api/client";
+import cronstrue from 'cronstrue';
 
 export interface ScheduleNoteCreateFormProps {
   onCreateNote?(sched: NoteSchedule): void;
@@ -9,6 +10,9 @@ export interface ScheduleNoteCreateFormProps {
 
 interface ScheduleNoteCreateFormState {
   creating: boolean;
+  currentNameText: string;
+  currentCronText: string;
+  currentTitleText: string;
 }
 
 export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormProps, ScheduleNoteCreateFormState> {
@@ -19,14 +23,20 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
   constructor(props: ScheduleNoteCreateFormProps) {
     super(props);
     this.createSchedule = this.createSchedule.bind(this);
+    this.onTitleChange = this.onTitleChange.bind(this);
+    this.onCronChange = this.onCronChange.bind(this);
+    this.onNameChange = this.onNameChange.bind(this);
 
     this.nameInput = React.createRef();
     this.cronInput = React.createRef();
     this.titleInput = React.createRef();
 
     this.state = {
-      creating: false
-    }
+      creating: false,
+      currentCronText: "",
+      currentNameText: "",
+      currentTitleText: ""
+    };
   }
 
   validateForm(name: string, cron: string, title: string): boolean {
@@ -57,21 +67,71 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
     }
   }
 
+  onNameChange(e: ChangeEvent<HTMLInputElement>): void {
+    this.setState({
+      currentNameText: e.target.value
+    })
+  }
+
+  onCronChange(e: ChangeEvent<HTMLInputElement>): void {
+    this.setState({
+      currentCronText: e.target.value
+    })
+  }
+
+  onTitleChange(e: ChangeEvent<HTMLInputElement>): void {
+    this.setState({
+      currentTitleText: e.target.value
+    })
+  }
+
   render(): ReactNode {
+    console.log(this.state);
+    let nameplaceholder;
+    let cronplaceholder;
+    let titleplaceholder;
+
+    const cronText = this.state.currentCronText;
+    if(cronText != "") {
+      try {
+        cronplaceholder = <span>{cronstrue.toString(cronText)}</span>
+      }
+      catch {
+        cronplaceholder = <span>Invalid Cron!</span>
+      }
+    }
+    else {
+      cronplaceholder = <span>When to create this page</span>
+    }
+
+    if(this.state.currentTitleText != "") {
+      titleplaceholder = <span>Create a Note</span>
+    }
+    else {
+      titleplaceholder = <span>The Name of the Schedule</span>
+    }
+
+    if(this.state.currentNameText != "") {
+      nameplaceholder = <span>Called {this.state.currentNameText}</span>
+    }
+    else {
+      nameplaceholder = <span>The name of the page to create</span>;
+    }
+
     return (<Row>
       <Col xs={{ span: 3 }} lg={{ span: 4 }}>
-        <Input placeholder="Name" ref={this.titleInput} />
-        <span>The title of this schedule</span>
+        <Input placeholder="Schedule Name" ref={this.titleInput} onChange={this.onTitleChange} />
+        {titleplaceholder}
       </Col>
 
       <Col xs={{ span: 3, offset: 1 }} lg={{ span: 4, offset: 1 }}>
-        <Input placeholder="Cron" ref={this.cronInput} />
-        <span>How often to create the page</span>
+        <Input placeholder="Cron" ref={this.cronInput} onChange={this.onCronChange} />
+        {cronplaceholder}
       </Col>
 
       <Col xs={{ span: 3, offset: 1 }} lg={{ span: 4, offset: 1 }}>
-        <Input placeholder="Name Pattern" ref={this.nameInput} />
-        <span>The name of the page to create</span>
+        <Input placeholder="Note Name Pattern" ref={this.nameInput} onChange={this.onNameChange} />
+        {nameplaceholder}
       </Col>
 
       <Col xs={{ span: 3, offset: 1 }} lg={{ span: 3, offset: 1 }}>

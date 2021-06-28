@@ -22,7 +22,7 @@ export class ScheduledNoteGrid extends Component<unknown, ScheduledNoteGridState
     });
   }
 
-  addSchedule(sched: NoteSchedule) {
+  addSchedule(sched: NoteSchedule): void {
     const currentSchedules = [...this.state.schedules];
     currentSchedules.push(sched);
     this.setState({

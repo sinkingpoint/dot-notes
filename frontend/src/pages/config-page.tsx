@@ -1,11 +1,7 @@
-import { Col, Divider, Input, Menu, Row } from 'antd';
-import Sider from 'antd/lib/layout/Sider';
-import Content from 'antd/lib/layout';
+import { Menu } from 'antd';
 import { SelectInfo } from 'rc-menu/lib/interface';
 import React, { Component, ReactNode } from 'react';
 import AppLayout from './main_layout';
-import { ScheduledNoteGrid } from '../components/scheduled_grid';
-import { ScheduledNoteCreateForm } from '../components/schedule_note_create_form';
 import CreateSchedulePage from './create-schedule-page';
 
 interface ConfigPageState {
