@@ -51,6 +51,7 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
     if(!current.name) {
       this.nameInput.current.input.setCustomValidity("Invalid Name");
       error = true;
+      console.log("ERROR empty name");
     }
     else {
       this.nameInput.current.input.setCustomValidity("");
@@ -59,6 +60,7 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
     if(!current.title) {
       this.titleInput.current.input.setCustomValidity("Invalid Title");
       error = true;
+      console.log("ERROR empty title");
     }
     else {
       this.titleInput.current.input.setCustomValidity("");
@@ -67,6 +69,7 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
     if(!current.cron) {
       this.cronInput.current.input.setCustomValidity("Invalid Cron");
       error = true;
+      console.log("ERROR empty cron");
     }
     else {
       try {
@@ -76,10 +79,11 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
       catch {
         this.cronInput.current.input.setCustomValidity("Invalid Cron");
         error = true;
+        console.log("ERROR bad cron");
       }
     }
 
-    return error;
+    return !error;
   }
 
   createSchedule(): void {
