@@ -10,9 +10,11 @@ export interface ScheduleNoteCreateFormProps {
 
 interface ScheduleNoteCreateFormState {
   creating: boolean;
-  currentNameText: string;
-  currentCronText: string;
-  currentTitleText: string;
+  currentTexts: {
+    name: string,
+    cron: string,
+    title: string
+  }
 }
 
 export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormProps, ScheduleNoteCreateFormState> {
@@ -33,14 +35,51 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
 
     this.state = {
       creating: false,
-      currentCronText: "",
-      currentNameText: "",
-      currentTitleText: ""
+      currentTexts: {
+        name: "",
+        cron: "",
+        title: ""
+      },
     };
   }
 
-  validateForm(name: string, cron: string, title: string): boolean {
-    return true;
+  validateForm(): boolean {
+    const current = {...this.state.currentTexts};
+
+    let error = false;
+
+    if(!current.name) {
+      this.nameInput.current.input.setCustomValidity("Invalid Name");
+      error = true;
+    }
+    else {
+      this.nameInput.current.input.setCustomValidity("");
+    }
+
+    if(!current.title) {
+      this.titleInput.current.input.setCustomValidity("Invalid Title");
+      error = true;
+    }
+    else {
+      this.titleInput.current.input.setCustomValidity("");
+    }
+
+    if(!current.cron) {
+      this.cronInput.current.input.setCustomValidity("Invalid Cron");
+      error = true;
+    }
+    else {
+      try {
+        cronstrue.toString(current.cron);
+        this.cronInput.current.input.setCustomValidity("");
+      }
+      catch {
+        this.cronInput.current.input.setCustomValidity("Invalid Cron");
+        error = true;
+      }
+    }
+
+    return error;
   }
 
   createSchedule(): void {
@@ -48,7 +87,7 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
     const cron = this.cronInput.current.state.value;
     const title = this.titleInput.current.state.value;
 
-    if(this.validateForm(name, cron, title)) {
+    if(this.validateForm()) {
       new APIClient().create_schedule({name_template: name, schedule_cron: cron, title: title}).then((id) => {
         if(this.props.onCreateNote) {
           this.props.onCreateNote({
@@ -68,30 +107,44 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
   }
 
   onNameChange(e: ChangeEvent<HTMLInputElement>): void {
+    const current = {...this.state.currentTexts};
+    current.name = e.target.value;
+
     this.setState({
-      currentNameText: e.target.value
-    })
+      currentTexts: current
+    });
+
+    this.validateForm();
   }
 
   onCronChange(e: ChangeEvent<HTMLInputElement>): void {
+    const current = {...this.state.currentTexts};
+    current.cron = e.target.value;
+
     this.setState({
-      currentCronText: e.target.value
-    })
+      currentTexts: current
+    });
+
+    this.validateForm();
   }
 
   onTitleChange(e: ChangeEvent<HTMLInputElement>): void {
+    const current = {...this.state.currentTexts};
+    current.title = e.target.value;
+
     this.setState({
-      currentTitleText: e.target.value
-    })
+      currentTexts: current
+    });
+
+    this.validateForm();
   }
 
   render(): ReactNode {
-    console.log(this.state);
     let nameplaceholder;
     let cronplaceholder;
     let titleplaceholder;
 
-    const cronText = this.state.currentCronText;
+    const cronText = this.state.currentTexts.cron;
     if(cronText != "") {
       try {
         cronplaceholder = <span>{cronstrue.toString(cronText)}</span>
@@ -104,21 +157,21 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
       cronplaceholder = <span>When to create this page</span>
     }
 
-    if(this.state.currentTitleText != "") {
+    if(this.state.currentTexts.title !== "") {
       titleplaceholder = <span>Create a Note</span>
     }
     else {
       titleplaceholder = <span>The Name of the Schedule</span>
     }
 
-    if(this.state.currentNameText != "") {
-      nameplaceholder = <span>Called {this.state.currentNameText}</span>
+    if(this.state.currentTexts.name !== "") {
+      nameplaceholder = <span>Called {this.state.currentTexts.name}</span>
     }
     else {
       nameplaceholder = <span>The name of the page to create</span>;
     }
 
-    return (<Row>
+    return (<Row className="form">
       <Col xs={{ span: 3 }} lg={{ span: 4 }}>
         <Input placeholder="Schedule Name" ref={this.titleInput} onChange={this.onTitleChange} />
         {titleplaceholder}
@@ -135,7 +188,7 @@ export class ScheduledNoteCreateForm extends Component<ScheduleNoteCreateFormPro
       </Col>
 
       <Col xs={{ span: 3, offset: 1 }} lg={{ span: 3, offset: 1 }}>
-        <Button type="default" onClick={this.createSchedule} loading={this.state.creating}>Create Schedule</Button>
+        <Button type="default" onClick={this.createSchedule} loading={this.state.creating} className="button-submit">Create Schedule</Button>
       </Col>
     </Row>);
   }
