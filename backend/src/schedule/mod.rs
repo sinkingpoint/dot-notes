@@ -27,11 +27,18 @@ impl From<DBSchedule> for Schedule {
 
 impl Schedule {
   pub fn new(id: i32, name: String, cron: &str, enabled: bool) -> Result<Schedule, cron::error::Error>{
+    // Hack ahoy: The cron library we use expects a second on the front and 
+    // a year on the end. We might not have one, so add them. See https://github.com/zslayton/cron/issues/13
+    let mut cron = cron.to_owned();
+    if cron.split_ascii_whitespace().count() == 5 {
+        cron = format!("0 {} *", cron);
+    }
+
     Ok(Self {
       id,
       name,
       enabled,
-      cron: match cron::Schedule::from_str(cron) {
+      cron: match cron::Schedule::from_str(&cron) {
         Ok(c) => c,
         Err(e) => {
           return Err(e)

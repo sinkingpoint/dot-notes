@@ -51,6 +51,9 @@ pub trait DBConnection {
     /// to match the given schedule
     fn update_schedule<T: Into<DBSchedule>>(&self, schedule: T) -> Result<(), DBError>;
 
+    // Deletes the schedule with the ID matching the given one
+    fn delete_schedule<T: Into<DBSchedule>>(&self, schedule: T) -> Result<(), DBError>;
+
     fn reconcile_note_links(
         &self,
         from_id: &str,
@@ -278,6 +281,17 @@ impl DBConnection for SQLLiteDBConnection {
             ))
             .execute(&connection)?;
         Ok(())
+    }
+
+    fn delete_schedule<T: Into<DBSchedule>>(&self, schedule: T) -> Result<(), DBError> {
+        let connection = self.pool.get().expect("Failed to get connection");
+        let schedule: DBSchedule = schedule.into();
+
+        diesel::delete(schedule::table)
+            .filter(schedule::id.eq(&schedule.id))
+            .execute(&connection)?;
+
+        return Ok(());
     }
 }
 

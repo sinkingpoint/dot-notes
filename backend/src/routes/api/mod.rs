@@ -65,13 +65,20 @@ pub fn get_api(
         .and(warp::put())
         .and(warp::filters::body::json())
         .and(with_db(db.clone()))
-        .and(with_scheduler(schedule_change_tx))
+        .and(with_scheduler(schedule_change_tx.clone()))
         .and_then(update_schedule);
 
     let get_schedules_path = warp::path!("schedule")
         .and(warp::get())
         .and(with_db(db.clone()))
         .and_then(get_schedules);
+
+    let delete_schedules_path = warp::path!("schedule")
+        .and(warp::delete())
+        .and(warp::filters::body::json())
+        .and(with_db(db.clone()))
+        .and(with_scheduler(schedule_change_tx))
+        .and_then(delete_schedule);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -94,7 +101,8 @@ pub fn get_api(
             .or(get_recent_notes_path)
             .or(create_schedules_path)
             .or(get_schedules_path)
-            .or(update_schedules_path),
+            .or(update_schedules_path)
+            .or(delete_schedules_path),
     );
     paths.with(cors)
 }
@@ -310,5 +318,19 @@ async fn get_schedules(db: SQLLiteDBConnection) -> Result<impl warp::Reply, warp
             let api_error: APIError = err.into();
             Err(warp::reject::custom(api_error))
         },
+    }
+}
+
+async fn delete_schedule(req: APISchedule, db: SQLLiteDBConnection, mut scheduler: mpsc::Sender<(Schedule, bool)>) -> Result<impl warp::Reply, warp::Rejection>  {
+    match db.delete_schedule(req.clone()) {
+        Ok(_) => {
+            let schedule = Schedule::new(req.id, req.name_template, &req.schedule_cron, true).unwrap();
+            match scheduler.send((schedule, false)).await {_ => {}};
+            Ok(StatusCode::NO_CONTENT)
+        },
+        Err(e) => {
+            let api_error: APIError = e.into();
+            Err(warp::reject::custom(api_error))
+        }
     }
 }

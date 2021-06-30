@@ -73,6 +73,10 @@ export class APIClient {
         return req.then(resp => resp.json()).then(j => j['id']);
     }
 
+    async delete_schedule(sched: NoteSchedule): Promise<Response> {
+        return this._delete("/api/v1/schedule", sched);
+    }
+
     async _get(uri: string): Promise<Response> {
         return fetch(this.apiBase + uri).then(resp => new Promise((resolve, reject) => {
             if(resp.status >= 300 || resp.status < 200) {
@@ -105,6 +109,21 @@ export class APIClient {
     async _put(uri: string, data?: unknown): Promise<Response> {
         const options: RequestInit = {
             method: 'PUT',
+            headers: {
+                "content-type": "application/json"
+            }
+        };
+
+        if(data !== undefined) {
+            options['body'] = JSON.stringify(data);
+        }
+
+        return fetch(this.apiBase + uri, options);
+    }
+
+    async _delete(uri: string, data?: unknown): Promise<Response> {
+        const options: RequestInit = {
+            method: 'DELETE',
             headers: {
                 "content-type": "application/json"
             }
