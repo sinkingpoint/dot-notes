@@ -1,22 +1,22 @@
-use saffron::{Cron, parse};
 use chrono::{DateTime, Duration};
 use slog::Logger;
 use tokio::{sync::mpsc, time::delay_for};
 
 use std::sync::Arc;
+use std::str::FromStr;
 use futures::lock::Mutex;
 
 use crate::db::{DBConnection, DBSchedule, SQLLiteDBConnection};
 
 pub fn is_valid_cron(cron: &str) -> bool {
-  cron.parse::<Cron>().is_ok()
+  cron::Schedule::from_str(cron).is_ok()
 }
 
 pub struct Schedule {
   id: i32,
   name: String,
   enabled: bool,
-  cron: Cron
+  cron: cron::Schedule
 }
 
 impl From<DBSchedule> for Schedule {
@@ -26,12 +26,12 @@ impl From<DBSchedule> for Schedule {
 }
 
 impl Schedule {
-  pub fn new(id: i32, name: String, cron: &str, enabled: bool) -> Result<Schedule, parse::CronParseError>{
+  pub fn new(id: i32, name: String, cron: &str, enabled: bool) -> Result<Schedule, cron::error::Error>{
     Ok(Self {
       id,
       name,
       enabled,
-      cron: match cron.parse() {
+      cron: match cron::Schedule::from_str(cron) {
         Ok(c) => c,
         Err(e) => {
           return Err(e)
@@ -40,17 +40,17 @@ impl Schedule {
     })
   }
 
-  fn get_next_time(&self) -> Option<DateTime<chrono::Utc>> {
+  fn get_next_time(&self) -> Option<DateTime<chrono::Local>> {
     if !self.enabled {
       return None;
     }
 
-    self.cron.next_after(chrono::Utc::now())
+    self.cron.upcoming(chrono::Local).next()
   }
 }
 
-fn get_next_to_fire(schedules: &Vec<Schedule>) -> Option<(DateTime<chrono::Utc>, Vec<String>)> {
-  let times: Vec<(&Schedule, DateTime<chrono::Utc>)> = schedules.iter().filter_map(|s| {
+fn get_next_to_fire(schedules: &Vec<Schedule>) -> Option<(DateTime<chrono::Local>, Vec<String>)> {
+  let times: Vec<(&Schedule, DateTime<chrono::Local>)> = schedules.iter().filter_map(|s| {
     match s.get_next_time() {
       Some(time) => Some((s, time)),
       None => None

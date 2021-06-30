@@ -253,6 +253,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cron"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e009ed0b762cf7a967a34dfdc67d5967d3f828f12901d37081432c3dd1668f8f"
+dependencies = [
+ "chrono",
+ "nom",
+ "once_cell",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -351,6 +362,7 @@ dependencies = [
  "atty",
  "chrono",
  "clap",
+ "cron",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -358,7 +370,6 @@ dependencies = [
  "libsqlite3-sys",
  "rand 0.7.3",
  "regex",
- "saffron",
  "serde",
  "serde_json",
  "slog",
@@ -951,12 +962,11 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "5.1.2"
+version = "4.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffb4262d26ed83a1c0a33a38fe2bb15797329c85770da05e6b828ddb782627af"
+checksum = "9c349f68f25f596b9f44cf0e7c69752a5c633b0550c3ff849518bfba0233774a"
 dependencies = [
  "memchr",
- "version_check",
 ]
 
 [[package]]
@@ -1374,15 +1384,6 @@ name = "safemem"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
-
-[[package]]
-name = "saffron"
-version = "0.1.0"
-source = "git+https://github.com/cloudflare/saffron?branch=main#e38c15f8d744a5fa864bc23069cf9941a90fa513"
-dependencies = [
- "chrono",
- "nom",
-]
 
 [[package]]
 name = "scheduled-thread-pool"

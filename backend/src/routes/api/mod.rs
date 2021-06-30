@@ -261,6 +261,14 @@ async fn get_recent_notes(
 }
 
 async fn create_schedule(req: NewScheduleRequest, db: SQLLiteDBConnection, mut scheduler: mpsc::Sender<(Schedule, bool)>) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut req = req.clone();
+
+    // Hack ahoy: The cron library we use expects a second on the front and 
+    // a year on the end. We might not have one, so add them. See https://github.com/zslayton/cron/issues/13
+    if req.schedule_cron.split_ascii_whitespace().count() == 5 {
+        req.schedule_cron = format!("0 {} *", req.schedule_cron);
+    }
+
     match db.create_schedule(req.clone()) {
         Ok(id) => {
             let schedule = Schedule::new(id, req.name_template, &req.schedule_cron, true).unwrap();
