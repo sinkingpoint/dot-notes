@@ -32,7 +32,10 @@ class NotePage extends Component<NotePageProps, NotePageState> {
 
   componentDidMount(): void {
     const api = new APIClient();
-    const get_note = api.get_note(this.props.note_id);
+    const get_note = api.get_note(this.props.note_id).catch(() => {
+      window.location.pathname = "/"
+    });
+    
     const get_links = api.get_links(this.props.note_id).then(links => {
       // TODO: Move this into the Backend to eliminate the multiple round trips
       const promises = links.links.map(link => api.get_note(link.to_id).then(note => {
@@ -49,7 +52,9 @@ class NotePage extends Component<NotePageProps, NotePageState> {
       const note = val[0];
       const links = val[1];
 
-      this.setState({note, links});
+      if(note) {
+        this.setState({note, links});
+      }
     });
   }
 

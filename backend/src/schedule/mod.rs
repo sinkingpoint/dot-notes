@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration};
 use slog::Logger;
+use tokio::time::{Instant, delay_until};
 use tokio::{sync::mpsc, time::delay_for};
 
 use std::sync::Arc;
@@ -100,21 +101,39 @@ impl NoteScheduler {
         get_next_to_fire(&schedules)
       };
 
-      if let Some((time, nexts)) = next {
-        let diff = time.signed_duration_since(chrono::Utc::now());
+
+      if let Some((mut time, mut nexts)) = next {
+        let diff = time.signed_duration_since(chrono::Local::now());
         info!(log, "Waiting {} to create {} notes", diff, nexts.len());
-        delay_for(diff.to_std().unwrap()).await;
+        delay_until(Instant::now() + diff.to_std().unwrap()).await;
+        println!("Finished");
 
-        let now = chrono::Utc::now();
+        let now = chrono::Local::now();
 
-        for next in nexts {
-          // Go through all the schedules that just fired and create their pages
-          let name = now.format(&next).to_string();
-          match db.create_note(&name) {
-            Ok(_) => {},
-            Err(e) => {
-              error!(log, "Failed to create note `{}`: {:?}", name, e);
+        while time <= now {
+          println!("Backfilling!!");
+          for next in nexts {
+            // Go through all the schedules that just fired and create their pages
+            let name = now.format(&next).to_string();
+            match db.create_note(&name) {
+              Ok(_) => {},
+              Err(e) => {
+                error!(log, "Failed to create note `{}`: {:?}", name, e);
+              }
             }
+          }
+
+          let next = {
+            let schedules = schedules.lock().await;
+            get_next_to_fire(&schedules)
+          };
+    
+          if let Some((next_time, next_nexts)) = next {
+            time = next_time;
+            nexts = next_nexts;
+          }
+          else {
+            break;
           }
         }
       }
