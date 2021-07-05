@@ -50,9 +50,12 @@
     "@types/react": "^16.9.53",
     "@types/react-dom": "^16.9.8",
     "antd": "^4.7.2",
+    "assert": "^2.0.0",
     "caret-pos": "^2.0.0",
     "cronstrue": "^1.114.0",
+    "mdast-util-gfm-autolink-literal": "^1.0.0",
     "micromark": "^2.10.1",
+    "micromark-extension-gfm-autolink-literal": "^1.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-markdown": "^5.0.2"

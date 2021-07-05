@@ -3,9 +3,11 @@ import { Input } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { plugin as checkboxes, render as checkboxes_render } from '../remark-extensions/checkboxes';
 import { plugin as note_link, render as note_link_render } from '../remark-extensions/note_link';
+import { plugin as links } from '../remark-extensions/links';
 import { Position } from "../remark-extensions/utils";
 import { position } from 'caret-pos';
 import SearchField from './search_field';
+
 
 const { TextArea } = Input;
 
@@ -134,7 +136,7 @@ export class EditableListItem extends Component<EditableListItemProps, EditableL
           // Note the replace here: We automatically add two spaces to the end of every line before rendering
           // This is to fool the markdown parser into now joining lines
           <div onClick={this.onClick} className={['note-input', 'ant-input', 'ant-input-borderless', className ? className : ""].join(' ')} id={JSON.stringify(this.props.indices)}>
-            {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link]} rawSourcePos={true}>
+            {content && <ReactMarkdown renderers={Object.assign({}, checkboxes_render(this.onCheckboxClick), note_link_render)} plugins={[checkboxes, note_link, links]} rawSourcePos={true}>
               {content.replace(/\n/g, "  \n")}
             </ReactMarkdown>
             || <p className="note-input-placeholder">{placeHolder}</p>}

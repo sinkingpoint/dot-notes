@@ -1,6 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const process = require("process")
 
 module.exports = {
   entry: {
@@ -100,5 +101,11 @@ module.exports = {
       minimize: true
     }),
     new webpack.optimize.AggressiveMergingPlugin(),
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(process.env)
+    })
   ]
 };
